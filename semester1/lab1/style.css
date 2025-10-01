@@ -24,3 +24,19 @@ header{
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
 }
+.showcase .shop-product {
+    background-color: antiquewhite;
+}
+
+.cart{
+    width: 400px;
+    background-color: #353432;
+    color: #eee;
+    position: fixed;
+    top: 0;
+    right: 0px;
+    bottom: 0;
+    display: grid;
+    grid-template-rows: 70px 1fr 70px;
+    transition: .5s;
+}
