@@ -50,6 +50,9 @@ function updateCartHTML(){
             <span>${product.quantity}</span>
             <span class="more">></span>
         </div>
+        <div class="delete-from-cart">
+            <span class="delete-from-cart-btn">X</span>
+        </div>
         `;
         cartHTML.appendChild(cartProductHTML);
 
@@ -120,6 +123,9 @@ cartHTML.addEventListener('click', event => {
         let product_id = element.parentElement.parentElement.dataset.id;
         let operation = (element.classList.contains('less')) ? -1 : 1;
         changeQuantity(product_id, operation);
+    }else if(element.classList.contains('delete-from-cart-btn')){
+        let product_id = element.parentElement.parentElement.dataset.id;
+        deleteFromCart(product_id);
     }
 })
 
@@ -131,10 +137,10 @@ function fetchProducts() {
         products = data;
         updateProductListHTML();
         // обновить корзину при повторном заходе на сайт
-        // if(localStorage.getItem('cart')){
-            // cart_products = JSON.parse(localStorage.getItem('cart'))
-            // updateCartHTML();
-        // }
+        if(localStorage.getItem('cart')){
+            cart_products = JSON.parse(localStorage.getItem('cart'))
+            updateCartHTML();
+        }
     })
 }
 
