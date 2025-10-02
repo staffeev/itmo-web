@@ -4,6 +4,7 @@ let cartHTML = document.querySelector('.cart-products');
 let totalQuantitySpan = document.querySelector('#total-count');
 let totalSumSpan = document.getElementById('total-sum-span');
 let checkOutBtn = document.querySelector('.check-out');
+let containerHTML = document.querySelector('.container');
 
 let cartIcon = document.querySelector('.icon-cart');
 let closeCartBtn = document.querySelector(".close-cart-btn");
@@ -172,39 +173,43 @@ modal.addEventListener('click', event => {
 });
 
 // оформление заказа
-// orderForm.addEventListener('submit', event => {
-//     event.preventDefault();
+orderForm.addEventListener('submit', event => {
+    event.preventDefault();
 
-//     const phoneRegex = /^\+?\d{10,}$/;
-//     let phone = orderForm.phone.value.trim();
-//     if (!phoneRegex.test(phone)) {
-//         phoneError.style.display = 'block';
-//         return;
-//     } else {
-//         phoneError.style.display = 'none';
-//     }
+    const phoneRegex = /^\+?\d{10,}$/;
+    let phone = orderForm.phone.value.trim();
+    if (!phoneRegex.test(phone)) {
+        phoneError.style.display = 'block';
+        return;
+    } else {
+        phoneError.style.display = 'none';
+    }
 
-//     alert("заказ успешно оформлен")
-//     modal.style.display = 'none';
-//     orderForm.reset();
-//     cart_products.splice(0);
-//     updateCartHTML();
+    alert("заказ успешно оформлен")
+    modal.style.display = 'none';
+    orderForm.reset();
+    cart_products.splice(0);
+    updateCartHTML();
 
-// })
+})
 
 // открытие корзины
-cartIcon.addEventListener("click", () => {
-    cartDiv.classList.toggle("open");
-});
-// закрытие корзины
-closeCartBtn.addEventListener("click", () => {
-    cartDiv.classList.remove("open");
-});
 document.addEventListener("click", (event) => {
   let path = event.composedPath();
   if (!path.includes(cartDiv) && !path.includes(cartIcon)) {
-    cartDiv.classList.remove("open");
+    cartDiv.classList.toggle("open");
+    containerHTML.classList.toggle('shifted');
   }
+});
+
+cartIcon.addEventListener('click', () => {
+    cartDiv.classList.toggle('open');
+    containerHTML.classList.toggle('shifted');
+});
+// закрытие корзины
+closeCartBtn.addEventListener("click", () => {
+    cartDiv.classList.toggle("open");
+    containerHTML.classList.toggle('shifted');
 });
 
 
