@@ -54,24 +54,50 @@ header{
 .cart-product img{
     max-width: 30px;
 }
+.cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
 
-.modal {
+.order-modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 2000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(0,0,0,0.5);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
+.order-modal.active {
+    display: flex;
+}
 
 .modal-content {
     background-color: #fff;
-    margin: 10% auto;
     padding: 20px;
     border-radius: 10px;
     width: 400px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    max-width: 90%;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+.modal-content {
+  position: relative;
 }

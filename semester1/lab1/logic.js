@@ -6,6 +6,7 @@ let totalSumSpan = document.getElementById('total-sum-span');
 let checkOutBtn = document.querySelector('.check-out');
 
 let cartIcon = document.querySelector('.icon-cart');
+let closeCartBtn = document.querySelector(".close-cart-btn");
 
 
 let modal = document.querySelector('.order-modal');
@@ -152,16 +153,23 @@ cartHTML.addEventListener('click', event => {
 
 
 // открытие и закрытие формы оформления заказа
-checkOutBtn.addEventListener('click', event => {
+checkOutBtn.addEventListener('click', () => {
     console.log('clickckckck');
-    modal.style.display = 'block';
+    modal.classList.add('active');
 })
 
 // сигналы от элементов форма оформления заказа
-closeModalBtn.onclick = () => modal.style.display = 'none';
-window.onclick = (event) => {
-    if (event.target === modal) modal.style.display = 'none';
-};
+closeModalBtn.addEventListener('click', event => {
+    event.preventDefault();
+    modal.classList.remove('active');
+});
+modal.addEventListener('click', event => {
+  if (event.target === modal) {
+    modal.classList.remove('active');
+  }
+});
+
+// оформление заказа
 orderForm.addEventListener('submit', event => {
     event.preventDefault();
 
@@ -187,6 +195,9 @@ cartIcon.addEventListener("click", () => {
     cartDiv.classList.toggle("open");
 });
 // закрытие корзины
+closeCartBtn.addEventListener("click", () => {
+    cartDiv.classList.remove("open");
+});
 document.addEventListener("click", (event) => {
   let path = event.composedPath();
   if (!path.includes(cartDiv) && !path.includes(cartIcon)) {
