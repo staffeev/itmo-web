@@ -1,5 +1,7 @@
 let showcaseHTML = document.querySelector('.showcase');
 let cartHTML = document.querySelector('.cart-products')
+let totalQuantitySpan = document.querySelector('#total-count');
+
 
 let products = [];
 let cart_products = [];
@@ -28,20 +30,20 @@ function updateCartHTML(){
     if(!cart_products.length){
         return;
     }
+    let totalQuantity = 0;
     cart_products.forEach(product => {
         let indexProduct = products.findIndex((value) => value.id == product.product_id);
         let infoProduct = products[indexProduct];
-        console.log(infoProduct);
-        
+
         cartProductHTML = document.createElement('div');
         cartProductHTML.classList.add('cart-product');
         cartProductHTML.innerHTML = `
-        <img src="" alt="loading...">
+        <img src="${infoProduct.image}" alt="loading...">
         <div class="cart-product-name">
             ${infoProduct.name}
         </div>
         <div class="cart-product-total-price">
-            ${infoProduct.price}
+            ${infoProduct.price * product.quantity}
         </div>
         <div class="cart-product-quantity">
             <span class="less"><</span>
@@ -50,7 +52,10 @@ function updateCartHTML(){
         </div>
         `;
         cartHTML.appendChild(cartProductHTML);
+
+        totalQuantity += product.quantity;
     })
+    totalQuantitySpan.innerText = totalQuantity;
 
 }
 

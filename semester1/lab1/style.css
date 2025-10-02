@@ -34,7 +34,7 @@ header{
     color: #eee;
     position: fixed;
     top: 0;
-    right: 0px;
+    right: -400px;
     bottom: 0;
     display: grid;
     grid-template-rows: 70px 1fr 70px;
