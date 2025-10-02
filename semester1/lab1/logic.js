@@ -43,7 +43,7 @@ function updateProductListHTML() {
         // цена
         let price = document.createElement('div');
         price.classList.add('product-price');
-        price.textContent = `${product.price} р`;
+        price.textContent = `${product.price.toFixed(2)} р`;
         // кнопка добавления в корзину
         const button = document.createElement('button');
         button.classList.add('add-to-cart');
@@ -67,7 +67,7 @@ function formatPrice(num) {
     } else if (num >= 1_000) {
         return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
     }
-    return num.toString();
+    return num;
 }
 
 // загрузка содержимого корзины
@@ -92,7 +92,7 @@ function updateCartHTML() {
         // цена
         let priceDiv = document.createElement('div');
         priceDiv.classList.add('cart-product-total-price');
-        priceDiv.textContent = `${infoProduct.price * product.quantity} р`;
+        priceDiv.textContent = `${(infoProduct.price * product.quantity).toFixed(2)} р`;
         // количество
         let quantityDiv = document.createElement('div');
         quantityDiv.classList.add('cart-product-quantity');
@@ -130,8 +130,8 @@ function updateCartHTML() {
     });
     totalSum = Math.round(totalSum * 100) / 100;
     // апдейт инфы о количестве и сумме
-    totalCartSum.innerText = formatPrice(totalSum) + ' р';
-    totalSumSpan.innerText = `${totalSum} р`;
+    totalCartSum.innerText = formatPrice(totalSum).toFixed(2) + ' р';
+    totalSumSpan.innerText = `${totalSum.toFixed(2)} р`;
     // сохранить в localStorage корзину
     localStorage.setItem('cart', JSON.stringify(cart_products));
     // активность кнопки оформления заказа
