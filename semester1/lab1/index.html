@@ -17,6 +17,7 @@
             <span id="total-count">0</span>
         </div>
     </header>
+    <!-- витрина товаров -->
     <div class="showcase">
         <!-- <div class="shop-product">
             <img src="" alt="loading...">
@@ -25,6 +26,7 @@
             <button class="add-to-cart">+</button>
         </div> -->
     </div>
+    <!-- корзина -->
     <div class="cart">
         <h2>Shopping cart</h2>
         <div class="cart-products">
@@ -57,7 +59,7 @@
     <div class="modal-content">
       <span class="close-modal">&times;</span>
       <h2>Оформление заказа</h2>
-      <form id="order-form">
+      <form class="order-form">
         <div class="form-group">
           <label>Имя</label>
           <input type="text" name="firstName" required>
@@ -69,12 +71,11 @@
         <div class="form-group">
           <label>Адрес доставки</label>
           <input type="text" name="address" required>
-          <div class="error" id="addressError">Адрес должен быть не короче 10 символов</div>
         </div>
         <div class="form-group">
           <label>Контактный телефон</label>
           <input type="text" name="phone" required>
-          <div class="error" id="phoneError">Введите корректный номер телефона</div>
+          <div class="phone-error" display="none">Введите корректный номер телефона</div>
         </div>
         <button type="submit" class="submit-btn">Создать заказ</button>
       </form>

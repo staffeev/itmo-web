@@ -8,7 +8,8 @@ let modal = document.querySelector('.order-modal');
 let openFormBtn = document.querySelector('.open-form');
 let closeModalBtn = document.querySelector('.close-modal');
 let orderForm = document.querySelector('.order-form');
-
+let formSubmitBtn = document.querySelector('.submit-btn');
+let phoneError = document.querySelector('.phone-error');
 
 let products = [];
 let cart_products = [];
@@ -122,6 +123,11 @@ function deleteFromCart(product_id){
 }
 
 
+function makeOrder(){
+
+}
+
+
 showcaseHTML.addEventListener('click', event => {
     let element = event.target;
     if(element.classList.contains('add-to-cart')){
@@ -152,10 +158,30 @@ checkOutBtn.addEventListener('click', event => {
     modal.style.display = 'block';
 })
 
+// сигналы от элементов форма оформления заказа
 closeModalBtn.onclick = () => modal.style.display = 'none';
 window.onclick = (event) => {
     if (event.target === modal) modal.style.display = 'none';
 };
+orderForm.addEventListener('submit', event => {
+    event.preventDefault();
+
+    const phoneRegex = /^\+?\d{10,}$/;
+    let phone = orderForm.phone.value.trim();
+    if (!phoneRegex.test(phone)) {
+        phoneError.style.display = 'block';
+        return;
+    } else {
+        phoneError.style.display = 'none';
+    }
+
+    alert("заказ успешно оформлен")
+    modal.style.display = 'none';
+    orderForm.reset();
+    cart_products.splice(0);
+    updateCartHTML();
+
+})
 
 
 // загрузка товаров из json
