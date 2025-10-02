@@ -32,11 +32,11 @@ function updateCartHTML(){
     }
     let totalQuantity = 0;
     cart_products.forEach(product => {
-        let indexProduct = products.findIndex((value) => value.id == product.product_id);
-        let infoProduct = products[indexProduct];
+        let infoProduct = products.find(value => value.id == product.product_id)
 
         cartProductHTML = document.createElement('div');
         cartProductHTML.classList.add('cart-product');
+        cartProductHTML.dataset.id = product.product_id;
         cartProductHTML.innerHTML = `
         <img src="${infoProduct.image}" alt="loading...">
         <div class="cart-product-name">
@@ -55,8 +55,9 @@ function updateCartHTML(){
 
         totalQuantity += product.quantity;
     })
-    totalQuantitySpan.innerText = totalQuantity;
-
+    totalQuantitySpan.innerText = (totalQuantity >= 99) ? '99+' : totalQuantity;
+    // сохранить в localStorage коризну
+    localStorage.setItem('cart', JSON.stringify(cart_products));
 }
 
 function addToCart(product_id){
@@ -82,7 +83,27 @@ function addToCart(product_id){
     
 }
 
-showcaseHTML.addEventListener('click', (event) => {
+
+function changeQuantity(product_id, operation){
+    indexProduct = cart_products.findIndex(value => value.product_id == product_id);
+    if(indexProduct == -1){
+        return;
+    }
+    if(cart_products[indexProduct].quantity + operation == 0){
+        cart_products.splice(indexProduct, 1);
+    }else{
+        cart_products[indexProduct].quantity += operation;
+    }
+    updateCartHTML();
+}
+
+function deleteFromCart(product_id){
+    indexProduct = cart_products.findIndex(value => value.product_id == product_id);
+    cart_products.splice(indexProduct, 1);
+    updateCartHTML();
+}
+
+showcaseHTML.addEventListener('click', event => {
     let element = event.target;
     if(element.classList.contains('add-to-cart')){
         let product_id = element.parentElement.dataset.id;
@@ -91,12 +112,29 @@ showcaseHTML.addEventListener('click', (event) => {
 })
 
 
+cartHTML.addEventListener('click', event => {
+    let element = event.target;
+    if(element.classList.contains('less') || element.classList.contains('more')){
+        console.log('click');
+        
+        let product_id = element.parentElement.parentElement.dataset.id;
+        let operation = (element.classList.contains('less')) ? -1 : 1;
+        changeQuantity(product_id, operation);
+    }
+})
+
+// загрузка товаров из json
 function fetchProducts() {
     fetch("./products.json")
     .then(response => response.json())
     .then(data => {
         products = data;
         updateProductListHTML();
+        // обновить корзину при повторном заходе на сайт
+        // if(localStorage.getItem('cart')){
+            // cart_products = JSON.parse(localStorage.getItem('cart'))
+            // updateCartHTML();
+        // }
     })
 }
 
