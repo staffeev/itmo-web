@@ -1,6 +1,8 @@
 let showcaseHTML = document.querySelector('.showcase');
 let cartHTML = document.querySelector('.cart-products')
 let totalQuantitySpan = document.querySelector('#total-count');
+let totalSumSpan = document.getElementById('total-sum-span');
+let checkOutBtn = document.querySelector('.check-out');
 
 
 let products = [];
@@ -27,10 +29,8 @@ function updateProductListHTML() {
 
 function updateCartHTML(){
     cartHTML.innerHTML = '';
-    if(!cart_products.length){
-        return;
-    }
     let totalQuantity = 0;
+    let totalSum = 0.0;
     cart_products.forEach(product => {
         let infoProduct = products.find(value => value.id == product.product_id)
 
@@ -57,10 +57,19 @@ function updateCartHTML(){
         cartHTML.appendChild(cartProductHTML);
 
         totalQuantity += product.quantity;
+        totalSum += infoProduct.price * product.quantity;
     })
+    // апдейт инфы о количестве и сумме
     totalQuantitySpan.innerText = (totalQuantity >= 99) ? '99+' : totalQuantity;
+    totalSumSpan.innerText = totalSum;
     // сохранить в localStorage коризну
     localStorage.setItem('cart', JSON.stringify(cart_products));
+    // активность кнопки оформления заказа
+    if(cart_products.length){
+        checkOutBtn.disabled = false;
+    }else{
+        checkOutBtn.disabled = true;
+    }
 }
 
 function addToCart(product_id){
@@ -100,11 +109,13 @@ function changeQuantity(product_id, operation){
     updateCartHTML();
 }
 
+
 function deleteFromCart(product_id){
     indexProduct = cart_products.findIndex(value => value.product_id == product_id);
     cart_products.splice(indexProduct, 1);
-    updateCartHTML();
+    updateCartHTML(); 
 }
+
 
 showcaseHTML.addEventListener('click', event => {
     let element = event.target;
@@ -127,6 +138,13 @@ cartHTML.addEventListener('click', event => {
         let product_id = element.parentElement.parentElement.dataset.id;
         deleteFromCart(product_id);
     }
+})
+
+
+checkOutBtn.addEventListener('click', event => {
+    console.log('clickckckck');
+    
+    
 })
 
 // загрузка товаров из json
