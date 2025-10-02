@@ -4,7 +4,7 @@
     <meta charset="UTF8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>baraholka</title>
-    <link rel="stylesheet" href="style2.css">
+    <link rel="stylesheet" href="style3.css">
 </head>
 <body>
 <div class="container">
@@ -29,7 +29,7 @@
     <!-- корзина -->
     <div class="cart">
         <div class="cart-header">
-            <h2>Shopping cart</h2>
+            <h2>Корзина</h2>
             <button class="close-cart-btn">&times;</button>
         </div>
         <div class="cart-products">
@@ -60,8 +60,10 @@
     <!-- форма оформления заказа -->
     <div class="order-modal">
         <div class="modal-content">
-        <button type="button" class="close-modal">&times;</button>
-        <h2>Оформление заказа</h2>
+        <div class="modal-header">
+            <span class="modal-title">Оформление заказа</span>
+            <button type="button" class="close-modal">&times;</button>
+        </div>
         <form class="order-form">
             <div class="form-group">
             <label>Имя</label>
@@ -83,7 +85,8 @@
             <button type="submit" class="submit-btn">Создать заказ</button>
         </form>
         </div>
-    </div>
+</div>
+
 </div>
 <script src="logic.js"></script>
 </body>

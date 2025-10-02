@@ -44,7 +44,7 @@ function updateProductListHTML() {
         // кнопка
         const button = document.createElement('button');
         button.classList.add('add-to-cart');
-        button.textContent = '+';
+        button.textContent = 'Добавить в корзину';
 
         newProductHTML.appendChild(img);
         newProductHTML.appendChild(title);
