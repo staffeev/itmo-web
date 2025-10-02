@@ -1,152 +1,104 @@
 [
   {
     "id": 1,
-    "image": "https://picsum.photos/seed/1/800/600",
+    "image": "./img/pr1.png",
     "name": "Видеокассета VHS — подборка хитов 90-х",
     "price": 19.00
   },
   {
     "id": 2,
-    "image": "https://picsum.photos/seed/2/800/600",
+    "image": "./img/pr2.png",
     "name": "Tamagotchi оригинал",
     "price": 29.50
   },
   {
     "id": 3,
-    "image": "https://picsum.photos/seed/3/800/600",
+    "image": "./img/pr3.png",
     "name": "Sony Walkman кассетный плеер",
     "price": 45.00
   },
   {
     "id": 4,
-    "image": "https://picsum.photos/seed/4/800/600",
+    "image": "./img/pr4.png",
     "name": "Game Boy Color (серый)",
     "price": 89.00
   },
   {
     "id": 5,
-    "image": "https://picsum.photos/seed/5/800/600",
+    "image": "./img/pr5.png",
     "name": "Furby оригинал 90-х",
     "price": 65.00
   },
   {
     "id": 6,
-    "image": "https://picsum.photos/seed/6/800/600",
+    "image": "./img/pr6.png",
     "name": "Beanie Baby — Princess Bear",
     "price": 35.00
   },
   {
     "id": 7,
-    "image": "https://picsum.photos/seed/7/800/600",
+    "image": "./img/pr7.png",
     "name": "Набор аудиокассет 90-х (10 шт.)",
     "price": 22.50
   },
   {
     "id": 8,
-    "image": "https://picsum.photos/seed/8/800/600",
+    "image": "./img/pr8.png",
     "name": "Сборник CD с хитами 90-х",
     "price": 14.00
   },
   {
     "id": 9,
-    "image": "https://picsum.photos/seed/9/800/600",
+    "image": "./img/pr9.png",
     "name": "Nokia 5110 ретро телефон",
     "price": 39.99
   },
   {
     "id": 10,
-    "image": "https://picsum.photos/seed/10/800/600",
+    "image": "./img/pr10.png",
     "name": "SEGA Mega Drive картридж",
     "price": 49.99
   },
   {
     "id": 11,
-    "image": "https://picsum.photos/seed/11/800/600",
-    "name": "Super Nintendo картридж",
-    "price": 54.00
-  },
-  {
-    "id": 12,
-    "image": "https://picsum.photos/seed/12/800/600",
+    "image": "./img/pr11.png",
     "name": "Polaroid 600 мгновенная камера",
     "price": 120.00
   },
   {
-    "id": 13,
-    "image": "https://picsum.photos/seed/13/800/600",
+    "id": 12,
+    "image": "./img/pr12.png",
     "name": "Пейджер Motorola",
     "price": 15.00
   },
   {
-    "id": 14,
-    "image": "https://picsum.photos/seed/14/800/600",
-    "name": "Fisher-Price игрушка 90-х",
-    "price": 28.00
-  },
-  {
-    "id": 15,
-    "image": "https://picsum.photos/seed/15/800/600",
+    "id": 13,
+    "image": "./img/pr13.png",
     "name": "Коллекционная фигурка Power Rangers",
     "price": 45.50
   },
   {
-    "id": 16,
-    "image": "https://picsum.photos/seed/16/800/600",
-    "name": "Портативная ретро-консоль 999in1",
-    "price": 59.99
-  },
-  {
-    "id": 17,
-    "image": "https://picsum.photos/seed/17/800/600",
-    "name": "Плюшевая кукла Polly Pocket",
-    "price": 25.00
-  },
-  {
-    "id": 18,
-    "image": "https://picsum.photos/seed/18/800/600",
-    "name": "Футболка с кассетным принтом 90-х",
-    "price": 20.00
-  },
-  {
-    "id": 19,
-    "image": "https://picsum.photos/seed/19/800/600",
-    "name": "Джинсовая куртка в стиле 90-х",
-    "price": 70.00
-  },
-  {
-    "id": 20,
-    "image": "https://picsum.photos/seed/20/800/600",
-    "name": "Лимитированная кукла Барби 90-х",
-    "price": 55.00
-  },
-  {
-    "id": 21,
-    "image": "https://picsum.photos/seed/21/800/600",
+    "id": 14,
+    "image": "./img/pr14.png",
     "name": "Роликовые коньки 90-х",
     "price": 60.00
   },
   {
-    "id": 22,
-    "image": "https://picsum.photos/seed/22/800/600",
-    "name": "Светящаяся игрушка Tamagotchi-подобная",
-    "price": 18.50
+    "id": 15,
+    "image": "./img/pr15.png",
+    "name": "Портативная ретро-консоль 999in1",
+    "price": 59.99
   },
   {
-    "id": 23,
-    "image": "https://picsum.photos/seed/23/800/600",
-    "name": "Кассетный адаптер для авто 90-х",
-    "price": 12.00
+    "id": 16,
+    "image": "./img/pr16.png",
+    "name": "Джинсовая куртка в стиле 90-х",
+    "price": 70.00
   },
   {
-    "id": 24,
-    "image": "https://picsum.photos/seed/24/800/600",
+    "id": 17,
+    "image": "./img/pr17.png",
     "name": "Набор карточек Pokémon 1st Edition",
     "price": 80.00
-  },
-  {
-    "id": 25,
-    "image": "https://picsum.photos/seed/25/800/600",
-    "name": "Ретро-плеер CD Walkman",
-    "price": 48.00
   }
 ]
