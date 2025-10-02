@@ -4,6 +4,11 @@ let totalQuantitySpan = document.querySelector('#total-count');
 let totalSumSpan = document.getElementById('total-sum-span');
 let checkOutBtn = document.querySelector('.check-out');
 
+let modal = document.querySelector('.order-modal');
+let openFormBtn = document.querySelector('.open-form');
+let closeModalBtn = document.querySelector('.close-modal');
+let orderForm = document.querySelector('.order-form');
+
 
 let products = [];
 let cart_products = [];
@@ -141,11 +146,17 @@ cartHTML.addEventListener('click', event => {
 })
 
 
+// открытие и закрытие формы оформления заказа
 checkOutBtn.addEventListener('click', event => {
     console.log('clickckckck');
-    
-    
+    modal.style.display = 'block';
 })
+
+closeModalBtn.onclick = () => modal.style.display = 'none';
+window.onclick = (event) => {
+    if (event.target === modal) modal.style.display = 'none';
+};
+
 
 // загрузка товаров из json
 function fetchProducts() {

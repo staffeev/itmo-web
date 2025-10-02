@@ -18,36 +18,12 @@
         </div>
     </header>
     <div class="showcase">
-        <div class="shop-product">
+        <!-- <div class="shop-product">
             <img src="" alt="loading...">
             <h3>MY PRODUCT</h3>
             <div class="product-price">1000$</div>
             <button class="add-to-cart">+</button>
-        </div>
-        <div class="shop-product">
-            <img src="" alt="loading...">
-            <h3>MY PRODUCT</h3>
-            <div class="product-price">1000$</div>
-            <button class="add-to-cart">+</button>
-        </div>
-        <div class="shop-product">
-            <img src="" alt="loading...">
-            <h3>MY PRODUCT</h3>
-            <div class="product-price">1000$</div>
-            <button class="add-to-cart">+</button>
-        </div>
-        <div class="shop-product">
-            <img src="" alt="loading...">
-            <h3>MY PRODUCT</h3>
-            <div class="product-price">1000$</div>
-            <button class="add-to-cart">+</button>
-        </div>
-        <div class="shop-product">
-            <img src="" alt="loading...">
-            <h3>MY PRODUCT</h3>
-            <div class="product-price">1000$</div>
-            <button class="add-to-cart">+</button>
-        </div>
+        </div> -->
     </div>
     <div class="cart">
         <h2>Shopping cart</h2>
@@ -75,6 +51,35 @@
         </div>
         <button class="check-out">Check out</button>
     </div>
+
+    <!-- форма оформления заказа -->
+    <div class="order-modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>Оформление заказа</h2>
+      <form id="order-form">
+        <div class="form-group">
+          <label>Имя</label>
+          <input type="text" name="firstName" required>
+        </div>
+        <div class="form-group">
+          <label>Фамилия</label>
+          <input type="text" name="lastName" required>
+        </div>
+        <div class="form-group">
+          <label>Адрес доставки</label>
+          <input type="text" name="address" required>
+          <div class="error" id="addressError">Адрес должен быть не короче 10 символов</div>
+        </div>
+        <div class="form-group">
+          <label>Контактный телефон</label>
+          <input type="text" name="phone" required>
+          <div class="error" id="phoneError">Введите корректный номер телефона</div>
+        </div>
+        <button type="submit" class="submit-btn">Создать заказ</button>
+      </form>
+    </div>
+  </div>
 </div>
 <script src="logic.js"></script>
 </body>
