@@ -161,6 +161,8 @@ checkOutBtn.addEventListener('click', () => {
 // сигналы от элементов форма оформления заказа
 closeModalBtn.addEventListener('click', event => {
     event.preventDefault();
+    console.log('aaaaaaaaaaa');
+    
     modal.classList.remove('active');
 });
 modal.addEventListener('click', event => {
@@ -170,25 +172,25 @@ modal.addEventListener('click', event => {
 });
 
 // оформление заказа
-orderForm.addEventListener('submit', event => {
-    event.preventDefault();
+// orderForm.addEventListener('submit', event => {
+//     event.preventDefault();
 
-    const phoneRegex = /^\+?\d{10,}$/;
-    let phone = orderForm.phone.value.trim();
-    if (!phoneRegex.test(phone)) {
-        phoneError.style.display = 'block';
-        return;
-    } else {
-        phoneError.style.display = 'none';
-    }
+//     const phoneRegex = /^\+?\d{10,}$/;
+//     let phone = orderForm.phone.value.trim();
+//     if (!phoneRegex.test(phone)) {
+//         phoneError.style.display = 'block';
+//         return;
+//     } else {
+//         phoneError.style.display = 'none';
+//     }
 
-    alert("заказ успешно оформлен")
-    modal.style.display = 'none';
-    orderForm.reset();
-    cart_products.splice(0);
-    updateCartHTML();
+//     alert("заказ успешно оформлен")
+//     modal.style.display = 'none';
+//     orderForm.reset();
+//     cart_products.splice(0);
+//     updateCartHTML();
 
-})
+// })
 
 // открытие корзины
 cartIcon.addEventListener("click", () => {
