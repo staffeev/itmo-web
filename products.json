@@ -1,0 +1,20 @@
+[
+  { "id": 1, "image": "./img/pr1.png", "name": "Видеокассета VHS с фильмами", "price": 99.99 },
+  { "id": 2, "image": "./img/pr2.png", "name": "Tamagotchi оригинал", "price": 299.50 },
+  { "id": 3, "image": "./img/pr3.png", "name": "Sony Walkman кассетный плеер", "price": 249.25 },
+  { "id": 4, "image": "./img/pr4.png", "name": "Game Boy Color", "price": 499.99 },
+  { "id": 5, "image": "./img/pr5.png", "name": "Furby оригинал", "price": 399.75 },
+  { "id": 6, "image": "./img/pr6.png", "name": "Beanie Baby Princess Bear", "price": 149.50 },
+  { "id": 7, "image": "./img/pr7.png", "name": "Набор аудиокассет", "price": 79.99 },
+  { "id": 8, "image": "./img/pr8.png", "name": "Сборник CD видеоигры", "price": 99.50 },
+  { "id": 9, "image": "./img/pr9.png", "name": "Nokia 5110 ретро телефон", "price": 199.75 },
+  { "id": 10, "image": "./img/pr10.png", "name": "SEGA Mega Drive картридж", "price": 249.99 },
+  { "id": 11, "image": "./img/pr11.png", "name": "Polaroid 600 мгновенная камера", "price": 749.50 },
+  { "id": 12, "image": "./img/pr12.png", "name": "Пейджер Motorola", "price": 59.99 },
+  { "id": 13, "image": "./img/pr13.png", "name": "Коллекционная фигурка Power Rangers", "price": 199.50 },
+  { "id": 14, "image": "./img/pr14.png", "name": "Роликовые коньки", "price": 349.99 },
+  { "id": 15, "image": "./img/pr15.png", "name": "Портативная консоль 999in1", "price": 299.75 },
+  { "id": 16, "image": "./img/pr16.png", "name": "Джинсовая куртка", "price": 399.50 },
+  { "id": 17, "image": "./img/pr17.png", "name": "Набор карточек Pokémon 1st Edition", "price": 449.99 },
+  { "id": 18, "image": "./img/pr18.png", "name": "Лимитированная кукла Барби", "price": 235.50 }
+]
