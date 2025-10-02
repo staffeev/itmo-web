@@ -1,8 +1,12 @@
 let showcaseHTML = document.querySelector('.showcase');
-let cartHTML = document.querySelector('.cart-products')
+let cartDiv = document.querySelector('.cart');
+let cartHTML = document.querySelector('.cart-products');
 let totalQuantitySpan = document.querySelector('#total-count');
 let totalSumSpan = document.getElementById('total-sum-span');
 let checkOutBtn = document.querySelector('.check-out');
+
+let cartIcon = document.querySelector('.icon-cart');
+
 
 let modal = document.querySelector('.order-modal');
 let openFormBtn = document.querySelector('.open-form');
@@ -123,11 +127,6 @@ function deleteFromCart(product_id){
 }
 
 
-function makeOrder(){
-
-}
-
-
 showcaseHTML.addEventListener('click', event => {
     let element = event.target;
     if(element.classList.contains('add-to-cart')){
@@ -182,6 +181,18 @@ orderForm.addEventListener('submit', event => {
     updateCartHTML();
 
 })
+
+// открытие корзины
+cartIcon.addEventListener("click", () => {
+    cartDiv.classList.toggle("open");
+});
+// закрытие корзины
+document.addEventListener("click", (event) => {
+  let path = event.composedPath();
+  if (!path.includes(cartDiv) && !path.includes(cartIcon)) {
+    cartDiv.classList.remove("open");
+  }
+});
 
 
 // загрузка товаров из json

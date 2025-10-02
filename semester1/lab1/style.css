@@ -27,23 +27,33 @@ header{
 .showcase .shop-product {
     background-color: antiquewhite;
 }
+.showcase .shop-product img{
+    max-width: 50px;
+}
 
-.cart{
+.cart {
     width: 400px;
     background-color: #353432;
     color: #eee;
     position: fixed;
     top: 0;
-    right: -0;
+    right: -400px;
     bottom: 0;
     display: grid;
     grid-template-rows: 70px 1fr 70px;
-    transition: .5s;
+    transition: right .5s;
+    z-index: 1000;
+}
+
+.cart.open {
+    right: 0;
 }
 .cart-products{
     overflow: auto;
 }
-
+.cart-product img{
+    max-width: 30px;
+}
 
 .modal {
     display: none;
