@@ -67,7 +67,7 @@ function formatPrice(num) {
     } else if (num >= 1_000) {
         return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
     }
-    return num;
+    return num.toFixed(2).toString();
 }
 
 // загрузка содержимого корзины
@@ -128,10 +128,11 @@ function updateCartHTML() {
 
         totalSum += infoProduct.price * product.quantity;
     });
+    
     totalSum = Math.round(totalSum * 100) / 100;
     // апдейт инфы о количестве и сумме
-    totalCartSum.innerText = formatPrice(totalSum).toFixed(2) + ' р';
-    totalSumSpan.innerText = `${totalSum.toFixed(2)} р`;
+    totalCartSum.innerText = formatPrice(totalSum) + ' р';
+    totalSumSpan.innerText = `${totalSum} р`;
     // сохранить в localStorage корзину
     localStorage.setItem('cart', JSON.stringify(cart_products));
     // активность кнопки оформления заказа
