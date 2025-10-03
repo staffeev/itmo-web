@@ -258,9 +258,19 @@ header .title {
   font-size: 14px;
   box-shadow: inset -2px -2px #808080, inset 2px 2px #fff;
 }
+
 .check-out:active {
   box-shadow: inset 2px 2px #808080, inset -2px -2px #fff;
 }
+
+.check-out:disabled {
+  background: #e0e0e0;
+  border: 2px solid #ccc;
+  color: #808080;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 
 
 .order-modal {
