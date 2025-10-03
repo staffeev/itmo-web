@@ -132,7 +132,7 @@ function updateCartHTML() {
     totalSum = Math.round(totalSum * 100) / 100;
     // апдейт инфы о количестве и сумме
     totalCartSum.innerText = formatPrice(totalSum) + ' р';
-    totalSumSpan.innerText = `${totalSum} р`;
+    totalSumSpan.innerText = `${totalSum.toFixed(2)} р`;
     // сохранить в localStorage корзину
     localStorage.setItem('cart', JSON.stringify(cart_products));
     // активность кнопки оформления заказа
