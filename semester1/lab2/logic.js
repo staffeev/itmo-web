@@ -15,21 +15,29 @@ function addTask() {
         let closeBtn = document.createElement("span");
         closeBtn.innerHTML = "\u00d7";
         task.appendChild(closeBtn);
+        saveData();
     }
     nameEntry.value = '';
 }
 
-function deleteTask() {
 
+function saveData() {
+    localStorage.setItem("data", taskContainer.innerHTML);
 }
 
+function showTasks() {
+    taskContainer.innerHTML = localStorage.getItem("data");
+}
 
 addBtn.onclick = addTask;
 
 taskContainer.addEventListener("click", e => {
     if(e.target.tagName === "SPAN") {
         e.target.parentElement.remove();
+        saveData();
     }
 })
+
+showTasks();
 
 
