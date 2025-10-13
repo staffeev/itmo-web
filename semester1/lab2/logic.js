@@ -5,39 +5,82 @@ let taskContainer = document.querySelector(".task-container");
 let tasks = [];
 
 
+function updateToDoListHTML() {
+    // очистка списка
+    while (taskContainer.firstChild) {
+        console.log(taskContainer.firstChild);
+        
+        taskContainer.removeChild(taskContainer.firstChild);
+    }
+    // добавление задач
+    tasks.forEach(task => {
+        let taskHTML = document.createElement("li");
+        taskHTML.textContent = task.title;
+        taskHTML.dataset.id = task.id;
+        taskContainer.appendChild(taskHTML);
+
+        let closeBtn = document.createElement("span");
+        closeBtn.textContent = "\u00d7";
+        taskHTML.appendChild(closeBtn);
+    });
+    console.log(tasks);
+    // saveData();
+}
+
+
 function addTask() {
     if(nameEntry.value === '') {
         alert("чтобы добавить задачу, надо написать ее");
-    }else{
-        let task = document.createElement("li")
-        task.innerHTML = nameEntry.value;
-        taskContainer.appendChild(task);
-        let closeBtn = document.createElement("span");
-        closeBtn.innerHTML = "\u00d7";
-        task.appendChild(closeBtn);
-        saveData();
+        return;
     }
+    if(!tasks.length){ // список пуст
+        tasks = [{
+            id: 1,
+            title: nameEntry.value
+        }]
+    }else { // добавить в уже непустой список наерх
+        tasks.unshift({
+            id: tasks.length + 1,
+            title: nameEntry.value
+        }); 
+    } 
+    updateToDoListHTML();
     nameEntry.value = '';
 }
 
 
-function saveData() {
-    localStorage.setItem("data", taskContainer.innerHTML);
+function deleteTask(task_id) {
+    indexTask = tasks.findIndex(value => value.id == task_id);
+    console.log(task_id, indexTask);
+    tasks.splice(indexTask, 1);
+    updateToDoListHTML(); 
+    // TODO: сдвиг индексов
 }
 
-function showTasks() {
-    taskContainer.innerHTML = localStorage.getItem("data");
+
+function saveData() {
+    localStorage.setItem('todo-list', JSON.stringify(tasks));
 }
+
 
 addBtn.onclick = addTask;
 
 taskContainer.addEventListener("click", e => {
     if(e.target.tagName === "SPAN") {
-        e.target.parentElement.remove();
-        saveData();
+        deleteTask(e.target.parentElement.dataset.id);
     }
 })
 
-showTasks();
+
+function loadToDoList(){
+    if(localStorage.getItem('todo-list')){
+        // tasks = JSON.parse(localStorage.getItem('todo-list'))
+        tasks = [];
+        updateToDoListHTML();
+    } else {
+        tasks = [];
+    }
+}
 
 
+loadToDoList();
