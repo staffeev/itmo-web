@@ -16,7 +16,7 @@ function createMainElements() {
     header.classList.add("header");
 
     const title = document.createElement("h2");
-    title.textContent = "Just To-Do It!";
+    title.textContent = "just to-do it!";
 
     // панель поиска и сортировки
     const controlPanel = document.createElement("div");
@@ -142,6 +142,7 @@ function updateToDoListHTML() {
         taskContainer.removeChild(taskContainer.firstChild);
     }
     let tasks_to_show = sortTasks(statusFilter(searchFilter(tasks)));
+    const todayStr = new Date().toISOString().split("T")[0];
     
     // добавление задач
     tasks_to_show.forEach(task => {
@@ -187,6 +188,15 @@ function updateToDoListHTML() {
             if (t) t.date = e.target.value;
             saveData();
         });
+
+        // проверка дедлайна
+        taskHTML.classList.remove("overdue", "today");
+        if (!task.active) {
+        } else if (task.date < todayStr) {
+            taskHTML.classList.add("overdue");
+        } else if (task.date === todayStr) {
+            taskHTML.classList.add("today");
+        }
 
         // кнопка удаления
         const closeBtn = document.createElement("span");

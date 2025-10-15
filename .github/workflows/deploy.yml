@@ -3,7 +3,7 @@ name: Deploy GitHub Pages
 on:
   push:
     branches:
-      - lab1
+      - lab2
 
 jobs:
   deploy:
