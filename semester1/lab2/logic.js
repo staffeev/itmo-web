@@ -125,9 +125,9 @@ function sortTasks(ts) {
         case "id_desc":
             return ts.sort((a, b) => b.id - a.id);
         case "deadline_asc":
-            return ts.sort((a, b) => (a.deadline || "") > (b.deadline || "") ? 1 : -1);
+            return ts.sort((a, b) => (a.date || "") > (b.date || "") ? 1 : -1);
         case "deadline_desc":
-            return ts.sort((a, b) => (a.deadline || "") < (b.deadline || "") ? 1 : -1);
+            return ts.sort((a, b) => (a.date || "") < (b.date || "") ? 1 : -1);
         default:
             return ts;
     }
@@ -167,7 +167,7 @@ function updateToDoListHTML() {
 
         dateInput.addEventListener("change", e => {
             const t = tasks.find(t => t.id == task.id);
-            if (t) t.deadline = e.target.value;
+            if (t) t.date = e.target.value;
         });
 
         // кнопка удаления
