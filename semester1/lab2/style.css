@@ -241,7 +241,6 @@ li.today input[type="date"] {
   }
 }
 
-/* компактное, но полностью видимое поле даты */
 .task-container input[type="date"] {
   flex: 0 0 auto;
   width: auto;
@@ -258,8 +257,7 @@ li.today input[type="date"] {
   border-radius: 4px;
   box-sizing: border-box;
 }
-
-/* мобильная версия — всё в одну линию, без вылазов */
+/* адаптивность */
 @media (max-width: 600px) {
   .task-container li {
     flex-direction: row;
