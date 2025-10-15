@@ -1,7 +1,30 @@
-body {
-  font-family: "MS Sans Serif", "Tahoma", sans-serif;
-  background: #c0d8e0;
-  color: black;
-  margin: 0;
-  padding: 0;
+.task-container li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-bottom: 1px solid #ddd;
+}
+
+.task-container input[type="text"] {
+  flex: 1;
+  border: none;
+  background: none;
+  font-size: 16px;
+}
+
+.task-container input[type="text"]:focus {
+  outline: none;
+  background: #f8f8f8;
+}
+
+.close-btn {
+  cursor: pointer;
+  font-weight: bold;
+  color: #888;
+  margin-left: 8px;
+}
+
+.close-btn:hover {
+  color: red;
 }

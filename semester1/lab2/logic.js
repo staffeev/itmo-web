@@ -1,51 +1,6 @@
-// const addBtn = document.querySelector("#add_task_btn");
-// const nameEntry = document.querySelector("#add_task_name");
-// let taskContainer = document.querySelector(".task-container");
-
 let addBtn, nameEntry, dateEntry, taskContainer, searchInput, sortSelect, filterSelect;
 let tasks = [];
 
-
-// function createMainElements() {
-//     // корневой контейнер
-//     const container = document.createElement("div");
-//     container.classList.add("container");
-//     // div приложения
-//     const app = document.createElement("div");
-//     app.classList.add("to-do-app");
-//     // заголовок
-//     const title = document.createElement("h2");
-//     title.textContent = "Just To-Do It!";
-//     // форма добаления задачи
-//     const row = document.createElement("div");
-//     row.classList.add("row");
-
-//     const input = document.createElement("input");
-//     input.type = "text";
-//     input.id = "add_task_name";
-//     input.placeholder = "напиши свою задачу...";
-
-//     const button = document.createElement("button");
-//     button.id = "add_task_btn";
-//     button.textContent = "добавить";
-
-//     row.append(input, button);
-
-//     // контейнер для задач
-//     const taskList = document.createElement("ul");
-//     taskList.classList.add("task-container");
-
-//     // сборка
-//     app.append(title, row, taskList);
-//     container.append(app);
-//     document.body.appendChild(container);
-
-//     // значения переменных
-//     addBtn = button;
-//     nameEntry = input;
-//     taskContainer = taskList;
-
-// }
 
 function createMainElements() {
     // корневой контейнер
@@ -118,7 +73,7 @@ function createMainElements() {
 
     dateEntry = document.createElement("input");
     dateEntry.type = "date";
-    dateEntry.value = new Date().toISOString().split("T")[0];;
+    dateEntry.value = new Date().toISOString().split("T")[0];
 
     addBtn = document.createElement("button");
     addBtn.textContent = "добавить";
@@ -178,25 +133,75 @@ function sortTasks(ts) {
     }
 }
 
+
 function updateToDoListHTML() {
     // очистка списка
-    console.log('AAAAAAAAA');
-    
     while (taskContainer.firstChild) {
         taskContainer.removeChild(taskContainer.firstChild);
     }
     let tasks_to_show = sortTasks(statusFilter(searchFilter(tasks)));
-    console.log(tasks_to_show);
     // добавление задач
     tasks_to_show.forEach(task => {
         let taskHTML = document.createElement("li");
-        taskHTML.textContent = task.title;
-        taskHTML.dataset.id = task.id;
+
+        // текст задачи
+        const titleInput = document.createElement("input");
+        titleInput.type = "text";
+        titleInput.value = task.title;
+        titleInput.classList.add("task-title");
+        if (!task.active) {
+            titleInput.style.textDecoration = "line-through";
+            titleInput.style.opacity = "0.6";
+        }
+
+        // изменение названия задачи
+        titleInput.addEventListener("input", e => {
+            const t = tasks.find(t => t.id == task.id);
+            if (t) t.title = e.target.value;
+        });
+
+        // выбор даты
+        const dateInput = document.createElement("input");
+        dateInput.type = "date";
+        dateInput.value = task.date || new Date().toISOString().split("T")[0];
+
+        dateInput.addEventListener("change", e => {
+            const t = tasks.find(t => t.id == task.id);
+            if (t) t.deadline = e.target.value;
+        });
+
+        // кнопка удаления
+        const closeBtn = document.createElement("span");
+        closeBtn.textContent = "\u00d7";
+        closeBtn.classList.add("close-btn");
+        closeBtn.addEventListener("click", e => {
+            e.stopPropagation();
+            deleteTask(task.id);
+        });
+
+        // клик по задаче = отметка выполненной
+        taskHTML.addEventListener("click", e => {
+            if (e.target.tagName !== "INPUT") { // чтобы не срабатывало при редактировании
+                const t = tasks.find(t => t.id == task.id);
+                if (t) {
+                    t.active = !t.active;
+                    saveData();
+                    updateToDoListHTML();
+                }
+            }
+        });
+
+        // сборка li
+        taskHTML.append(titleInput, dateInput, closeBtn);
         taskContainer.appendChild(taskHTML);
 
-        let closeBtn = document.createElement("span");
-        closeBtn.textContent = "\u00d7";
-        taskHTML.appendChild(closeBtn);
+        // taskHTML.textContent = task.title;
+        // taskHTML.dataset.id = task.id;
+        // taskContainer.appendChild(taskHTML);
+
+        // let closeBtn = document.createElement("span");
+        // closeBtn.textContent = "\u00d7";
+        // taskHTML.appendChild(closeBtn);
     });
     // saveData();
 }
@@ -207,23 +212,25 @@ function addTask() {
         alert("чтобы добавить задачу, надо написать ее");
         return;
     }
+    let deadline = dateEntry.value || null;
     if(!tasks.length){ // список пуст
         tasks = [{
             id: 1,
             active: true,
-            date: dateEntry.value,
+            date: deadline,
             title: nameEntry.value
         }]
     }else { // добавить в уже непустой список наерх
         tasks.unshift({
             id: tasks.length + 1,
             active: true,
-            date: dateEntry.value,
+            date: deadline,
             title: nameEntry.value
         }); 
     } 
     updateToDoListHTML();
     nameEntry.value = '';
+    dateEntry.value = new Date().toISOString().split("T")[0];;
 }
 
 
@@ -240,13 +247,13 @@ function saveData() {
 }
 
 
-addBtn.onclick = addTask;
+// addBtn.onclick = addTask;
 
-taskContainer.addEventListener("click", e => {
-    if(e.target.tagName === "SPAN") {
-        deleteTask(e.target.parentElement.dataset.id);
-    }
-})
+// taskContainer.addEventListener("click", e => {
+//     if(e.target.tagName === "SPAN") {
+//         deleteTask(e.target.parentElement.dataset.id);
+//     }
+// })
 
 
 function loadToDoList(){
