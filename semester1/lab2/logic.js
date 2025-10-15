@@ -31,6 +31,7 @@ function createMainElements() {
     sortSelect = document.createElement("select");
 
     const sortOptions = [
+        { value: "custom", text: "пользовательская" },
         { value: "id_desc", text: "сначала новые" },
         { value: "id_asc", text: "сначала старые" },
         { value: "deadline_asc", text: "сначала срочные ↑" },
@@ -91,7 +92,6 @@ function createMainElements() {
 
     // события
     addBtn.onclick = addTask;
-    // taskContainer.addEventListener("click", taskClickHandler);
     searchInput.addEventListener("input", updateToDoListHTML);
     sortSelect.addEventListener("change", updateToDoListHTML);
     filterSelect.addEventListener("change", updateToDoListHTML);
@@ -120,6 +120,8 @@ function statusFilter(ts) {
 
 function sortTasks(ts) {
     switch (sortSelect.value) {
+        case "custom":
+            return ts;
         case "id_asc":
             return ts.sort((a, b) => a.id - b.id);
         case "id_desc":
@@ -140,9 +142,12 @@ function updateToDoListHTML() {
         taskContainer.removeChild(taskContainer.firstChild);
     }
     let tasks_to_show = sortTasks(statusFilter(searchFilter(tasks)));
+    
     // добавление задач
     tasks_to_show.forEach(task => {
         let taskHTML = document.createElement("li");
+        taskHTML.draggable = true;
+        taskHTML.dataset.id = task.id;
         taskHTML.classList.toggle("done", !task.active);
 
         // кружочек слева
@@ -154,7 +159,7 @@ function updateToDoListHTML() {
             const t = tasks.find(t => t.id == task.id);
             if (t) {
                 t.active = !t.active;
-                // saveData();
+                saveData();
                 updateToDoListHTML();
             }
         });
@@ -164,16 +169,12 @@ function updateToDoListHTML() {
         titleInput.type = "text";
         titleInput.value = task.title;
         titleInput.classList.add("task-title");
-        // if (!task.active) {
-        //     titleInput.style.textDecoration = "line-through";
-        //     titleInput.style.opacity = "0.6";
-        // }
 
         // изменение названия задачи
         titleInput.addEventListener("input", e => {
             const t = tasks.find(t => t.id == task.id);
             if (t) t.title = e.target.value;
-            // saveData();
+            saveData();
         });
 
         // выбор даты
@@ -184,7 +185,7 @@ function updateToDoListHTML() {
         dateInput.addEventListener("change", e => {
             const t = tasks.find(t => t.id == task.id);
             if (t) t.date = e.target.value;
-            // saveData();
+            saveData();
         });
 
         // кнопка удаления
@@ -196,19 +197,51 @@ function updateToDoListHTML() {
             deleteTask(task.id);
         });
 
-        // сборка li
+        // сборка
         taskHTML.append(circle, titleInput, dateInput, closeBtn);
         taskContainer.appendChild(taskHTML);
 
-        // taskHTML.textContent = task.title;
-        // taskHTML.dataset.id = task.id;
-        // taskContainer.appendChild(taskHTML);
-
-        // let closeBtn = document.createElement("span");
-        // closeBtn.textContent = "\u00d7";
-        // taskHTML.appendChild(closeBtn);
+        // обработчики для drag and drop
+        taskHTML.addEventListener("dragstart", handleDragStart);
+        taskHTML.addEventListener("dragover", handleDragOver);
+        taskHTML.addEventListener("drop", handleDrop);
+        taskHTML.addEventListener("dragend", handleDragEnd);
     });
     saveData();
+}
+
+
+let draggedElement = null;
+
+function handleDragStart(e) {
+    draggedElement = this;
+    this.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    const dragging = taskContainer.querySelector(".dragging");
+    const siblings = [...taskContainer.querySelectorAll("li:not(.dragging)")];
+    const nextSibling = siblings.find(sibling => {
+        return e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2;
+    });
+    taskContainer.insertBefore(dragging, nextSibling || null);
+}
+
+function handleDrop(e) {
+    e.stopPropagation();
+    this.classList.remove("over");
+}
+
+function handleDragEnd() {
+    this.classList.remove("dragging");
+    // обновление порядка задач в массиве
+    const newOrder = Array.from(taskContainer.children).map(li => parseInt(li.dataset.id));
+    console.log(newOrder);
+    tasks = newOrder.map(id => tasks.find(t => t.id === id));
+    saveData();
+    sortSelect.value = "custom";
 }
 
 
@@ -243,7 +276,6 @@ function deleteTask(task_id) {
     indexTask = tasks.findIndex(value => value.id == task_id);
     tasks.splice(indexTask, 1);
     updateToDoListHTML(); 
-    // TODO: сдвиг индексов
 }
 
 
@@ -252,24 +284,14 @@ function saveData() {
 }
 
 
-// addBtn.onclick = addTask;
-
-// taskContainer.addEventListener("click", e => {
-//     if(e.target.tagName === "SPAN") {
-//         deleteTask(e.target.parentElement.dataset.id);
-//     }
-// })
-
-
 function loadToDoList(){
     if(localStorage.getItem('todo-list')){
-        // tasks = JSON.parse(localStorage.getItem('todo-list'))
-        tasks = [];
+        tasks = JSON.parse(localStorage.getItem('todo-list'))
+        // tasks = [];
         updateToDoListHTML();
     } else {
         tasks = [];
     }
 }
-
 
 loadToDoList();

@@ -104,3 +104,16 @@ li.done .task-title {
 .close-btn:hover {
   color: red;
 }
+
+.task-container li.dragging {
+  opacity: 0.5;
+  background: #f0f0f0;
+}
+
+.task-container li {
+  transition: background 0.2s, transform 0.2s;
+}
+
+.task-container li.over {
+  border-top: 2px solid #4caf50;
+}
