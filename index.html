@@ -3,70 +3,11 @@
 <head>
     <meta charset="UTF8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>барахолка</title>
+    <title>just to-do it!</title>
     <link rel="icon" type="image/png" href="./img/w95.png">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="container">
-    <header>
-        <div class="title">барахолка</div>
-        <div class="icon-cart">
-            <svg id="cart-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                <path fill-rule="evenodd" d="M4 4a1 1 0 0 1 1-1h1.5a1 1 0 0 1 .979.796L7.939 6H19a1 1 0 0 1 .979 1.204l-1.25 6a1 1 0 0 1-.979.796H9.605l.208 1H17a3 3 0 1 1-2.83 2h-2.34a3 3 0 1 1-4.009-1.76L5.686 5H5a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
-            </svg>
-            <span id="total-cart-sum">0</span>
-        </div>
-    </header>
-    <!-- витрина товаров -->
-    <div class="showcase">
-        <!-- тут товары -->
-    </div>
-    <!-- корзина -->
-    <div class="cart">
-        <div class="cart-header">
-            <h2>Корзина</h2>
-            <button class="close-cart-btn">&times;</button>
-        </div>
-        <div class="cart-products">
-            <!-- тут товары из корзины -->
-        </div>
-        <div class="total-sum">
-            Total: <span id="total-sum-span">0$</span>
-        </div>
-        <button class="check-out">Check out</button>
-    </div>
-
-    <!-- форма оформления заказа -->
-    <div class="order-modal">
-        <div class="modal-content">
-        <div class="modal-header">
-            <span class="modal-title">Оформление заказа</span>
-            <button type="button" class="close-modal">&times;</button>
-        </div>
-        <form class="order-form">
-            <div class="form-group">
-            <label>Имя</label>
-            <input type="text" name="firstName" required>
-            </div>
-            <div class="form-group">
-            <label>Фамилия</label>
-            <input type="text" name="lastName" required>
-            </div>
-            <div class="form-group">
-            <label>Адрес доставки</label>
-            <input type="text" name="address" required>
-            </div>
-            <div class="form-group">
-            <label>Контактный телефон</label>
-            <input type="text" name="phone" required>
-            <div class="phone-error" style="display:none">Введите корректный номер телефона</div>
-            </div>
-            <button type="submit" class="submit-btn">Создать заказ</button>
-        </form>
-        </div>
-    </div>
-</div>
 <script src="logic.js"></script>
 </body>
 </html>

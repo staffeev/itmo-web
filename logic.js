@@ -1,272 +1,307 @@
-let showcaseHTML = document.querySelector('.showcase');
-let cartDiv = document.querySelector('.cart');
-let cartHTML = document.querySelector('.cart-products');
-let totalCartSum = document.querySelector('#total-cart-sum');
-let totalSumSpan = document.getElementById('total-sum-span');
-let checkOutBtn = document.querySelector('.check-out');
-let containerHTML = document.querySelector('.container');
-
-let cartIcon = document.querySelector('.icon-cart');
-let closeCartBtn = document.querySelector(".close-cart-btn");
+let addBtn, nameEntry, dateEntry, taskContainer, searchInput, sortSelect, filterSelect;
+let tasks = [];
 
 
-let modal = document.querySelector('.order-modal');
-let openFormBtn = document.querySelector('.open-form');
-let closeModalBtn = document.querySelector('.close-modal');
-let orderForm = document.querySelector('.order-form');
-let formSubmitBtn = document.querySelector('.submit-btn');
-let phoneError = document.querySelector('.phone-error');
+function createMainElements() {
+    // корневой контейнер
+    const container = document.createElement("div");
+    container.classList.add("container");
 
-let products = [];
-let cart_products = [];
+    // div приложения
+    const app = document.createElement("div");
+    app.classList.add("to-do-app");
 
+    // верхняя панель
+    const header = document.createElement("div");
+    header.classList.add("header");
 
-// загрузка карточек товаров
-function updateProductListHTML() {
-    showcaseHTML.innerHTML = ''; 
-    if (!products.length) return;
+    const title = document.createElement("h2");
+    title.textContent = "just to-do it!";
 
-    products.forEach(product => {
-        // контейнер для товара
-        let newProductHTML = document.createElement('div');
-        newProductHTML.classList.add('shop-product');
-        newProductHTML.dataset.id = product.id;
-        // картинка
-        let img = document.createElement('img');
-        img.src = product.image;
-        img.alt = product.name;
-        // название
-        let title = document.createElement('h3');
-        title.textContent = product.name;
-        let footer = document.createElement('div');
-        footer.classList.add('product-footer');
-        // цена
-        let price = document.createElement('div');
-        price.classList.add('product-price');
-        price.textContent = `${product.price.toFixed(2)} р`;
-        // кнопка добавления в корзину
-        const button = document.createElement('button');
-        button.classList.add('add-to-cart');
-        button.textContent = 'Добавить в корзину';
-        footer.appendChild(price);
-        footer.appendChild(button);
+    // панель поиска и сортировки
+    const controlPanel = document.createElement("div");
+    controlPanel.classList.add("controls");
 
-        newProductHTML.appendChild(img);
-        newProductHTML.appendChild(title);
-        newProductHTML.appendChild(footer);
+    // поиск
+    searchInput = document.createElement("input");
+    searchInput.type = "text";
+    searchInput.placeholder = "поиск по названию...";
 
-        showcaseHTML.appendChild(newProductHTML);
+    // сортировка
+    sortSelect = document.createElement("select");
+
+    const sortOptions = [
+        { value: "custom", text: "пользовательская" },
+        { value: "id_desc", text: "сначала новые" },
+        { value: "id_asc", text: "сначала старые" },
+        { value: "deadline_asc", text: "сначала срочные ↑" },
+        { value: "deadline_desc", text: "сначала несрочные ↓" },
+    ];
+
+    sortOptions.forEach(opt => {
+        const option = document.createElement("option");
+        option.value = opt.value;
+        option.textContent = opt.text;
+        sortSelect.appendChild(option);
     });
+
+    // фильтрация
+    filterSelect = document.createElement("select");
+
+    const filterOptions = [
+        { value: "all", text: "все" },
+        { value: "active", text: "невыполненные" },
+        { value: "done", text: "выполненные" },
+    ];
+
+    filterOptions.forEach(opt => {
+        const option = document.createElement("option");
+        option.value = opt.value;
+        option.textContent = opt.text;
+        filterSelect.appendChild(option);
+    });
+
+    controlPanel.append(searchInput, sortSelect, filterSelect);
+    header.append(title, controlPanel);
+
+    // форма добавления задачи
+    const row = document.createElement("div");
+    row.classList.add("row");
+
+    nameEntry = document.createElement("input");
+    nameEntry.type = "text";
+    nameEntry.placeholder = "напиши свою задачу...";
+
+    dateEntry = document.createElement("input");
+    dateEntry.type = "date";
+    dateEntry.value = new Date().toISOString().split("T")[0];
+
+    addBtn = document.createElement("button");
+    addBtn.textContent = "добавить";
+
+    row.append(nameEntry, dateEntry, addBtn);
+
+    // контейнер для задач
+    taskContainer = document.createElement("ul");
+    taskContainer.classList.add("task-container");
+
+    // сборка
+    app.append(header, row, taskContainer);
+    container.append(app);
+    document.body.appendChild(container);
+
+    // события
+    addBtn.onclick = addTask;
+    searchInput.addEventListener("input", updateToDoListHTML);
+    sortSelect.addEventListener("change", updateToDoListHTML);
+    filterSelect.addEventListener("change", updateToDoListHTML);
 }
 
 
-// красивое отображение стоимости заказа
-function formatPrice(num) {
-    if (num >= 1_000_000) {
-        return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
-    } else if (num >= 1_000) {
-        return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+createMainElements();
+
+
+function searchFilter(ts) {
+    const query = searchInput.value.trim().toLowerCase();
+    if (query === "") return ts;
+    return ts.filter(t => t.title.toLowerCase().includes(query));
+}
+
+function statusFilter(ts) {
+    switch (filterSelect.value) {
+        case "active":
+            return ts.filter(t => t.active);
+        case "done":
+            return ts.filter(t => !t.active);
+        default:
+            return ts;
     }
-    return num.toFixed(2).toString();;
 }
 
-// загрузка содержимого корзины
-function updateCartHTML() {
-    cartHTML.innerHTML = '';
-    let totalSum = 0.0;
+function sortTasks(ts) {
+    switch (sortSelect.value) {
+        case "custom":
+            return ts;
+        case "id_asc":
+            return ts.sort((a, b) => a.id - b.id);
+        case "id_desc":
+            return ts.sort((a, b) => b.id - a.id);
+        case "deadline_asc":
+            return ts.sort((a, b) => (a.date || "") > (b.date || "") ? 1 : -1);
+        case "deadline_desc":
+            return ts.sort((a, b) => (a.date || "") < (b.date || "") ? 1 : -1);
+        default:
+            return ts;
+    }
+}
 
-    cart_products.forEach(product => {
-        let infoProduct = products.find(value => value.id == product.product_id);
 
-        let cartProductHTML = document.createElement('div');
-        cartProductHTML.classList.add('cart-product');
-        cartProductHTML.dataset.id = product.product_id;
-        // картинка
-        let img = document.createElement('img');
-        img.src = infoProduct.image;
-        img.alt = infoProduct.name;
-        // название
-        let nameDiv = document.createElement('div');
-        nameDiv.classList.add('cart-product-name');
-        nameDiv.textContent = infoProduct.name;
-        // цена
-        let priceDiv = document.createElement('div');
-        priceDiv.classList.add('cart-product-total-price');
-        priceDiv.textContent = `${(infoProduct.price * product.quantity).toFixed(2)} р`;
-        // количество
-        let quantityDiv = document.createElement('div');
-        quantityDiv.classList.add('cart-product-quantity');
-        // изменение количества
-        let lessBtn = document.createElement('span');
-        lessBtn.classList.add('less');
-        lessBtn.textContent = '<';
-        let quantitySpan = document.createElement('span');
-        quantitySpan.textContent = product.quantity;
-        let moreBtn = document.createElement('span');
-        moreBtn.classList.add('more');
-        moreBtn.textContent = '>';
+function updateToDoListHTML() {
+    // очистка списка
+    while (taskContainer.firstChild) {
+        taskContainer.removeChild(taskContainer.firstChild);
+    }
+    let tasks_to_show = sortTasks(statusFilter(searchFilter(tasks)));
+    const todayStr = new Date().toISOString().split("T")[0];
+    
+    // добавление задач
+    tasks_to_show.forEach(task => {
+        let taskHTML = document.createElement("li");
+        taskHTML.draggable = true;
+        taskHTML.dataset.id = task.id;
+        taskHTML.classList.toggle("done", !task.active);
 
-        quantityDiv.appendChild(lessBtn);
-        quantityDiv.appendChild(quantitySpan);
-        quantityDiv.appendChild(moreBtn);
+        // кружочек слева
+        const circle = document.createElement("span");
+        circle.classList.add("circle");
+
+        circle.addEventListener("click", e => {
+            e.stopPropagation();
+            const t = tasks.find(t => t.id == task.id);
+            if (t) {
+                t.active = !t.active;
+                saveData();
+                updateToDoListHTML();
+            }
+        });
+
+        // текст задачи
+        const titleInput = document.createElement("input");
+        titleInput.type = "text";
+        titleInput.value = task.title;
+        titleInput.classList.add("task-title");
+
+        // изменение названия задачи
+        titleInput.addEventListener("input", e => {
+            const t = tasks.find(t => t.id == task.id);
+            if (t) t.title = e.target.value;
+            saveData();
+        });
+
+        // выбор даты
+        const dateInput = document.createElement("input");
+        dateInput.type = "date";
+        dateInput.value = task.date || new Date().toISOString().split("T")[0];
+
+        dateInput.addEventListener("change", e => {
+            const t = tasks.find(t => t.id == task.id);
+            if (t) t.date = e.target.value;
+            saveData();
+        });
+
+        // проверка дедлайна
+        taskHTML.classList.remove("overdue", "today");
+        if (!task.active) {
+        } else if (task.date < todayStr) {
+            taskHTML.classList.add("overdue");
+        } else if (task.date === todayStr) {
+            taskHTML.classList.add("today");
+        }
 
         // кнопка удаления
-        let deleteDiv = document.createElement('div');
-        deleteDiv.classList.add('delete-from-cart');
-        let deleteBtn = document.createElement('span');
-        deleteBtn.classList.add('delete-from-cart-btn');
-        deleteBtn.textContent = '×';
+        const closeBtn = document.createElement("span");
+        closeBtn.textContent = "\u00d7";
+        closeBtn.classList.add("close-btn");
+        closeBtn.addEventListener("click", e => {
+            e.stopPropagation();
+            deleteTask(task.id);
+        });
 
-        deleteDiv.appendChild(deleteBtn);
+        // сборка
+        taskHTML.append(circle, titleInput, dateInput, closeBtn);
+        taskContainer.appendChild(taskHTML);
 
-        cartProductHTML.appendChild(img);
-        cartProductHTML.appendChild(nameDiv);
-        cartProductHTML.appendChild(priceDiv);
-        cartProductHTML.appendChild(quantityDiv);
-        cartProductHTML.appendChild(deleteDiv);
-        cartHTML.appendChild(cartProductHTML);
-
-        totalSum += infoProduct.price * product.quantity;
+        // обработчики для drag and drop
+        taskHTML.addEventListener("dragstart", handleDragStart);
+        taskHTML.addEventListener("dragover", handleDragOver);
+        taskHTML.addEventListener("drop", handleDrop);
+        taskHTML.addEventListener("dragend", handleDragEnd);
     });
-    totalSum = Math.round(totalSum * 100) / 100;
-    // апдейт инфы о количестве и сумме
-    totalCartSum.innerText = formatPrice(totalSum) + ' р';
-    totalSumSpan.innerText = `${totalSum.toFixed(2)} р`;
-    // сохранить в localStorage корзину
-    localStorage.setItem('cart', JSON.stringify(cart_products));
-    // активность кнопки оформления заказа
-    checkOutBtn.disabled = cart_products.length === 0;
+    saveData();
 }
 
 
-// добавление товара в корзину
-function addToCart(product_id){
-    let index_in_cart = cart_products.findIndex((value) => value.product_id == product_id);
-    if(!cart_products.length){ // корзина пуста
-        cart_products = [
-            {
-                product_id: product_id,
-                quantity: 1
-            }
-        ]
-    }else if(index_in_cart == -1){ // в корзине нет этого товара
-        cart_products.push({
-                product_id: product_id,
-                quantity: 1
-            });
-    }else{ // продукт уже есть в корзине
-        cart_products[index_in_cart].quantity++;
-    }   
-    updateCartHTML();
+let draggedElement = null;
+
+function handleDragStart(e) {
+    draggedElement = this;
+    this.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
 }
 
-// изменение количества товара в корзине
-function changeQuantity(product_id, operation){
-    indexProduct = cart_products.findIndex(value => value.product_id == product_id);
-    if(indexProduct == -1){
+function handleDragOver(e) {
+    e.preventDefault();
+    const dragging = taskContainer.querySelector(".dragging");
+    const siblings = [...taskContainer.querySelectorAll("li:not(.dragging)")];
+    const nextSibling = siblings.find(sibling => {
+        return e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2;
+    });
+    taskContainer.insertBefore(dragging, nextSibling || null);
+}
+
+function handleDrop(e) {
+    e.stopPropagation();
+    this.classList.remove("over");
+}
+
+function handleDragEnd() {
+    this.classList.remove("dragging");
+    // обновление порядка задач в массиве
+    const newOrder = Array.from(taskContainer.children).map(li => parseInt(li.dataset.id));
+    console.log(newOrder);
+    tasks = newOrder.map(id => tasks.find(t => t.id === id));
+    saveData();
+    sortSelect.value = "custom";
+}
+
+
+function addTask() {
+    if(nameEntry.value === '') {
+        alert("чтобы добавить задачу, надо написать ее");
         return;
     }
-    if(cart_products[indexProduct].quantity + operation == 0){
-        cart_products.splice(indexProduct, 1);
-    }else{
-        cart_products[indexProduct].quantity += operation;
-    }
-    updateCartHTML();
+    let deadline = dateEntry.value || null;
+    if(!tasks.length){ // список пуст
+        tasks = [{
+            id: 1,
+            active: true,
+            date: deadline,
+            title: nameEntry.value
+        }]
+    }else { // добавить в уже непустой список наерх
+        tasks.unshift({
+            id: tasks.length + 1,
+            active: true,
+            date: deadline,
+            title: nameEntry.value
+        }); 
+    } 
+    updateToDoListHTML();
+    nameEntry.value = '';
+    dateEntry.value = new Date().toISOString().split("T")[0];;
 }
 
-// удаление товара
-function deleteFromCart(product_id){
-    indexProduct = cart_products.findIndex(value => value.product_id == product_id);
-    cart_products.splice(indexProduct, 1);
-    updateCartHTML(); 
+
+function deleteTask(task_id) {
+    indexTask = tasks.findIndex(value => value.id == task_id);
+    tasks.splice(indexTask, 1);
+    updateToDoListHTML(); 
 }
 
-// обработка сигнала для добавления товара в корзину
-showcaseHTML.addEventListener('click', event => {
-    let element = event.target;
-    if (element.classList.contains('add-to-cart')) {
-        let product_id = element.closest('.shop-product').dataset.id;
-        addToCart(product_id);
-    }
-});
 
-// обработка сигнала для изменения количества товаров
-cartHTML.addEventListener('click', event => {
-    let element = event.target;
-    if(element.classList.contains('less') || element.classList.contains('more')){
-        let product_id = element.parentElement.parentElement.dataset.id;
-        let operation = (element.classList.contains('less')) ? -1 : 1;
-        changeQuantity(product_id, operation);
-    }else if(element.classList.contains('delete-from-cart-btn')){
-        let product_id = element.parentElement.parentElement.dataset.id;
-        deleteFromCart(product_id);
-    }
-})
+function saveData() {
+    localStorage.setItem('todo-list', JSON.stringify(tasks));
+}
 
 
-// открытие и закрытие формы оформления заказа
-checkOutBtn.addEventListener('click', () => {
-    modal.classList.add('active');
-})
-
-// сигналы от элементов форма оформления заказа
-closeModalBtn.addEventListener('click', event => {
-    event.preventDefault();
-    modal.classList.remove('active');
-});
-modal.addEventListener('click', event => {
-  if (event.target === modal) {
-    modal.classList.remove('active');
-  }
-});
-
-// оформление заказа
-orderForm.addEventListener('submit', event => {
-    event.preventDefault();
-
-    const phoneRegex = /^\+?\d{10,}$/;
-    let phone = orderForm.phone.value.trim();
-    if (!phoneRegex.test(phone)) {
-        phoneError.style.display = 'block';
-        return;
+function loadToDoList(){
+    if(localStorage.getItem('todo-list')){
+        tasks = JSON.parse(localStorage.getItem('todo-list'))
+        // tasks = [];
+        updateToDoListHTML();
     } else {
-        phoneError.style.display = 'none';
+        tasks = [];
     }
-
-    alert("заказ успешно оформлен")
-    modal.style.display = 'none';
-    orderForm.reset();
-    cart_products.splice(0);
-    updateCartHTML();
-
-})
-
-
-// открытие корзины
-cartIcon.addEventListener('click', () => {
-    cartDiv.classList.toggle('open');
-    containerHTML.classList.toggle('shifted');
-});
-// закрытие корзины
-closeCartBtn.addEventListener("click", () => {
-    cartDiv.classList.toggle("open");
-    containerHTML.classList.toggle('shifted');
-});
-
-
-// загрузка товаров из json
-function fetchProducts() {
-    fetch("./products.json")
-    .then(response => response.json())
-    .then(data => {
-        products = data;
-        updateProductListHTML();
-        // обновить корзину при повторном заходе на сайт
-        if(localStorage.getItem('cart')){
-            cart_products = JSON.parse(localStorage.getItem('cart'))
-            updateCartHTML();
-        }
-    })
 }
 
-fetchProducts();
+loadToDoList();
