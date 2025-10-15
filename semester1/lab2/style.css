@@ -1,0 +1,291 @@
+/* база*/
+body {
+  background-color: #0c0c0c;
+  color: #00ff66;
+  font-family: "Fira Code", "Courier New", monospace;
+  font-size: 16px;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.container {
+  width: 100%;
+  max-width: 700px;
+  background: #0f0f0f;
+  border: 1px solid #00ff66;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 0 20px #00ff6633;
+}
+
+/* заголовок */
+.to-do-app h2 {
+  color: #00ff66;
+  font-weight: 400;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.to-do-app h2::before {
+  content: "$ ";
+  color: #ffff66;
+  opacity: 0.8;
+}
+
+h2::after {
+  content: "_";
+  animation: blink 1s infinite steps(2);
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* === ПАНЕЛЬ УПРАВЛЕНИЯ === */
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.controls {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+}
+
+.controls input,
+.controls select {
+  flex: 1;
+  min-width: 0;
+  background: #111;
+  color: #66ccff;
+  border: 1px solid #66ccff;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+  box-sizing: border-box;
+}
+
+.controls input:focus,
+.controls select:focus {
+  box-shadow: 0 0 6px #66ccff;
+}
+
+.controls input::placeholder {
+  color: #66ccff88;
+}
+
+/* панель добавления задач */
+.row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.row input[type="text"] {
+  flex: 2;
+  color: #00ff66;
+  border: 1px solid #00ff66;
+  background: #111;
+}
+
+.row input[type="date"] {
+  flex: 1;
+  color: #ffff66;
+  border: 1px solid #ffff66;
+  background: #111;
+}
+
+.row button {
+  background: #66ccff;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  padding: 6px 8px;
+  flex: 1;
+}
+
+.row button:hover {
+  background: #3399ff;
+}
+
+/* список задач */
+.task-container {
+  margin-top: 12px;
+  padding-left: 0;
+  list-style: none;
+  border-top: 1px solid #00ff6633;
+}
+
+.task-container li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-bottom: 1px solid #00ff6622;
+  transition: background 0.2s, transform 0.2s;
+}
+
+/* кружочек слева */
+.circle {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #00ff66;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+li.done .circle {
+  background-color: #00ff66;
+  border-color: #00ff66;
+  box-shadow: none;
+}
+
+/* текст задачи */
+.task-title {
+  flex: 1;
+  border: none;
+  background: none;
+  color: #00ff66;
+  font-family: inherit;
+  font-size: 16px;
+}
+
+li.done .task-title {
+  text-decoration: line-through;
+  color: #888888;
+}
+
+/* дата */
+.task-container input[type="date"] {
+  background: none;
+  border: 1px solid #66ccff;
+  border-radius: 4px;
+  color: #66ccff;
+  padding: 3px 6px;
+}
+
+/* просроченный дедлайн */
+li.overdue .task-title,
+li.overdue input[type="date"] {
+  color: #ff6666;
+  border-color: #ff6666;
+}
+
+/* дедлайн сегодня */
+li.today .task-title,
+li.today input[type="date"] {
+  color: #ffff66;
+  border-color: #ffff66;
+}
+
+.task-container input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(80%) sepia(50%) saturate(200%) hue-rotate(180deg);
+}
+
+/* кнопка удаления */
+.close-btn {
+  cursor: pointer;
+  color: #ff6666;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.close-btn:hover {
+  color: #ff0000;
+}
+
+/* drag and drop */
+.task-container li.dragging {
+  opacity: 0.4;
+  background: #111;
+  border: 1px dashed #66ccff;
+}
+
+.task-container li.over {
+  border-top: 2px solid #66ccff;
+}
+
+/* адаптивность */
+@media (max-width: 600px) {
+  .controls {
+    flex-direction: column;
+  }
+
+  .row {
+    flex-direction: column;
+  }
+
+  .task-container li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .task-container li input[type="date"] {
+    width: 100%;
+  }
+}
+
+.task-container input[type="date"] {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 85px;
+  max-width: 110px;
+  font-size: 13px;
+  padding: 2px 4px;
+  text-align: center;
+  transform: scaleX(0.9);
+  transform-origin: left center;
+  background: none;
+  color: #66ccff;
+  border: 1px solid #66ccff;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+/* адаптивность */
+@media (max-width: 600px) {
+  .task-container li {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+
+  .circle {
+    flex-shrink: 0;
+  }
+
+  .task-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .task-container input[type="date"] {
+    font-size: 10px;
+    transform: scaleX(0.85);
+    max-width: 105px;
+    min-width: 80px;
+  }
+
+  .close-btn {
+    flex-shrink: 0;
+  }
+}

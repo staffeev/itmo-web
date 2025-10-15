@@ -1,0 +1,307 @@
+let addBtn, nameEntry, dateEntry, taskContainer, searchInput, sortSelect, filterSelect;
+let tasks = [];
+
+
+function createMainElements() {
+    // корневой контейнер
+    const container = document.createElement("div");
+    container.classList.add("container");
+
+    // div приложения
+    const app = document.createElement("div");
+    app.classList.add("to-do-app");
+
+    // верхняя панель
+    const header = document.createElement("div");
+    header.classList.add("header");
+
+    const title = document.createElement("h2");
+    title.textContent = "just to-do it!";
+
+    // панель поиска и сортировки
+    const controlPanel = document.createElement("div");
+    controlPanel.classList.add("controls");
+
+    // поиск
+    searchInput = document.createElement("input");
+    searchInput.type = "text";
+    searchInput.placeholder = "поиск по названию...";
+
+    // сортировка
+    sortSelect = document.createElement("select");
+
+    const sortOptions = [
+        { value: "custom", text: "пользовательская" },
+        { value: "id_desc", text: "сначала новые" },
+        { value: "id_asc", text: "сначала старые" },
+        { value: "deadline_asc", text: "сначала срочные ↑" },
+        { value: "deadline_desc", text: "сначала несрочные ↓" },
+    ];
+
+    sortOptions.forEach(opt => {
+        const option = document.createElement("option");
+        option.value = opt.value;
+        option.textContent = opt.text;
+        sortSelect.appendChild(option);
+    });
+
+    // фильтрация
+    filterSelect = document.createElement("select");
+
+    const filterOptions = [
+        { value: "all", text: "все" },
+        { value: "active", text: "невыполненные" },
+        { value: "done", text: "выполненные" },
+    ];
+
+    filterOptions.forEach(opt => {
+        const option = document.createElement("option");
+        option.value = opt.value;
+        option.textContent = opt.text;
+        filterSelect.appendChild(option);
+    });
+
+    controlPanel.append(searchInput, sortSelect, filterSelect);
+    header.append(title, controlPanel);
+
+    // форма добавления задачи
+    const row = document.createElement("div");
+    row.classList.add("row");
+
+    nameEntry = document.createElement("input");
+    nameEntry.type = "text";
+    nameEntry.placeholder = "напиши свою задачу...";
+
+    dateEntry = document.createElement("input");
+    dateEntry.type = "date";
+    dateEntry.value = new Date().toISOString().split("T")[0];
+
+    addBtn = document.createElement("button");
+    addBtn.textContent = "добавить";
+
+    row.append(nameEntry, dateEntry, addBtn);
+
+    // контейнер для задач
+    taskContainer = document.createElement("ul");
+    taskContainer.classList.add("task-container");
+
+    // сборка
+    app.append(header, row, taskContainer);
+    container.append(app);
+    document.body.appendChild(container);
+
+    // события
+    addBtn.onclick = addTask;
+    searchInput.addEventListener("input", updateToDoListHTML);
+    sortSelect.addEventListener("change", updateToDoListHTML);
+    filterSelect.addEventListener("change", updateToDoListHTML);
+}
+
+
+createMainElements();
+
+
+function searchFilter(ts) {
+    const query = searchInput.value.trim().toLowerCase();
+    if (query === "") return ts;
+    return ts.filter(t => t.title.toLowerCase().includes(query));
+}
+
+function statusFilter(ts) {
+    switch (filterSelect.value) {
+        case "active":
+            return ts.filter(t => t.active);
+        case "done":
+            return ts.filter(t => !t.active);
+        default:
+            return ts;
+    }
+}
+
+function sortTasks(ts) {
+    switch (sortSelect.value) {
+        case "custom":
+            return ts;
+        case "id_asc":
+            return ts.sort((a, b) => a.id - b.id);
+        case "id_desc":
+            return ts.sort((a, b) => b.id - a.id);
+        case "deadline_asc":
+            return ts.sort((a, b) => (a.date || "") > (b.date || "") ? 1 : -1);
+        case "deadline_desc":
+            return ts.sort((a, b) => (a.date || "") < (b.date || "") ? 1 : -1);
+        default:
+            return ts;
+    }
+}
+
+
+function updateToDoListHTML() {
+    // очистка списка
+    while (taskContainer.firstChild) {
+        taskContainer.removeChild(taskContainer.firstChild);
+    }
+    let tasks_to_show = sortTasks(statusFilter(searchFilter(tasks)));
+    const todayStr = new Date().toISOString().split("T")[0];
+    
+    // добавление задач
+    tasks_to_show.forEach(task => {
+        let taskHTML = document.createElement("li");
+        taskHTML.draggable = true;
+        taskHTML.dataset.id = task.id;
+        taskHTML.classList.toggle("done", !task.active);
+
+        // кружочек слева
+        const circle = document.createElement("span");
+        circle.classList.add("circle");
+
+        circle.addEventListener("click", e => {
+            e.stopPropagation();
+            const t = tasks.find(t => t.id == task.id);
+            if (t) {
+                t.active = !t.active;
+                saveData();
+                updateToDoListHTML();
+            }
+        });
+
+        // текст задачи
+        const titleInput = document.createElement("input");
+        titleInput.type = "text";
+        titleInput.value = task.title;
+        titleInput.classList.add("task-title");
+
+        // изменение названия задачи
+        titleInput.addEventListener("input", e => {
+            const t = tasks.find(t => t.id == task.id);
+            if (t) t.title = e.target.value;
+            saveData();
+        });
+
+        // выбор даты
+        const dateInput = document.createElement("input");
+        dateInput.type = "date";
+        dateInput.value = task.date || new Date().toISOString().split("T")[0];
+
+        dateInput.addEventListener("change", e => {
+            const t = tasks.find(t => t.id == task.id);
+            if (t) t.date = e.target.value;
+            saveData();
+        });
+
+        // проверка дедлайна
+        taskHTML.classList.remove("overdue", "today");
+        if (!task.active) {
+        } else if (task.date < todayStr) {
+            taskHTML.classList.add("overdue");
+        } else if (task.date === todayStr) {
+            taskHTML.classList.add("today");
+        }
+
+        // кнопка удаления
+        const closeBtn = document.createElement("span");
+        closeBtn.textContent = "\u00d7";
+        closeBtn.classList.add("close-btn");
+        closeBtn.addEventListener("click", e => {
+            e.stopPropagation();
+            deleteTask(task.id);
+        });
+
+        // сборка
+        taskHTML.append(circle, titleInput, dateInput, closeBtn);
+        taskContainer.appendChild(taskHTML);
+
+        // обработчики для drag and drop
+        taskHTML.addEventListener("dragstart", handleDragStart);
+        taskHTML.addEventListener("dragover", handleDragOver);
+        taskHTML.addEventListener("drop", handleDrop);
+        taskHTML.addEventListener("dragend", handleDragEnd);
+    });
+    saveData();
+}
+
+
+let draggedElement = null;
+
+function handleDragStart(e) {
+    draggedElement = this;
+    this.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    const dragging = taskContainer.querySelector(".dragging");
+    const siblings = [...taskContainer.querySelectorAll("li:not(.dragging)")];
+    const nextSibling = siblings.find(sibling => {
+        return e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2;
+    });
+    taskContainer.insertBefore(dragging, nextSibling || null);
+}
+
+function handleDrop(e) {
+    e.stopPropagation();
+    this.classList.remove("over");
+}
+
+function handleDragEnd() {
+    this.classList.remove("dragging");
+    // обновление порядка задач в массиве
+    const newOrder = Array.from(taskContainer.children).map(li => parseInt(li.dataset.id));
+    console.log(newOrder);
+    tasks = newOrder.map(id => tasks.find(t => t.id === id));
+    saveData();
+    sortSelect.value = "custom";
+}
+
+
+function addTask() {
+    if(nameEntry.value === '') {
+        alert("чтобы добавить задачу, надо написать ее");
+        return;
+    }
+    let deadline = dateEntry.value || null;
+    if(!tasks.length){ // список пуст
+        tasks = [{
+            id: 1,
+            active: true,
+            date: deadline,
+            title: nameEntry.value
+        }]
+    }else { // добавить в уже непустой список наерх
+        tasks.unshift({
+            id: tasks.length + 1,
+            active: true,
+            date: deadline,
+            title: nameEntry.value
+        }); 
+    } 
+    updateToDoListHTML();
+    nameEntry.value = '';
+    dateEntry.value = new Date().toISOString().split("T")[0];;
+}
+
+
+function deleteTask(task_id) {
+    indexTask = tasks.findIndex(value => value.id == task_id);
+    tasks.splice(indexTask, 1);
+    updateToDoListHTML(); 
+}
+
+
+function saveData() {
+    localStorage.setItem('todo-list', JSON.stringify(tasks));
+}
+
+
+function loadToDoList(){
+    if(localStorage.getItem('todo-list')){
+        tasks = JSON.parse(localStorage.getItem('todo-list'))
+        // tasks = [];
+        updateToDoListHTML();
+    } else {
+        tasks = [];
+    }
+}
+
+loadToDoList();
