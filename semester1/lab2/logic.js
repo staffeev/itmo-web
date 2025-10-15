@@ -143,21 +143,37 @@ function updateToDoListHTML() {
     // добавление задач
     tasks_to_show.forEach(task => {
         let taskHTML = document.createElement("li");
+        taskHTML.classList.toggle("done", !task.active);
+
+        // кружочек слева
+        const circle = document.createElement("span");
+        circle.classList.add("circle");
+
+        circle.addEventListener("click", e => {
+            e.stopPropagation();
+            const t = tasks.find(t => t.id == task.id);
+            if (t) {
+                t.active = !t.active;
+                // saveData();
+                updateToDoListHTML();
+            }
+        });
 
         // текст задачи
         const titleInput = document.createElement("input");
         titleInput.type = "text";
         titleInput.value = task.title;
         titleInput.classList.add("task-title");
-        if (!task.active) {
-            titleInput.style.textDecoration = "line-through";
-            titleInput.style.opacity = "0.6";
-        }
+        // if (!task.active) {
+        //     titleInput.style.textDecoration = "line-through";
+        //     titleInput.style.opacity = "0.6";
+        // }
 
         // изменение названия задачи
         titleInput.addEventListener("input", e => {
             const t = tasks.find(t => t.id == task.id);
             if (t) t.title = e.target.value;
+            // saveData();
         });
 
         // выбор даты
@@ -168,6 +184,7 @@ function updateToDoListHTML() {
         dateInput.addEventListener("change", e => {
             const t = tasks.find(t => t.id == task.id);
             if (t) t.date = e.target.value;
+            // saveData();
         });
 
         // кнопка удаления
@@ -179,20 +196,8 @@ function updateToDoListHTML() {
             deleteTask(task.id);
         });
 
-        // клик по задаче = отметка выполненной
-        taskHTML.addEventListener("click", e => {
-            if (e.target.tagName !== "INPUT") { // чтобы не срабатывало при редактировании
-                const t = tasks.find(t => t.id == task.id);
-                if (t) {
-                    t.active = !t.active;
-                    saveData();
-                    updateToDoListHTML();
-                }
-            }
-        });
-
         // сборка li
-        taskHTML.append(titleInput, dateInput, closeBtn);
+        taskHTML.append(circle, titleInput, dateInput, closeBtn);
         taskContainer.appendChild(taskHTML);
 
         // taskHTML.textContent = task.title;
@@ -203,7 +208,7 @@ function updateToDoListHTML() {
         // closeBtn.textContent = "\u00d7";
         // taskHTML.appendChild(closeBtn);
     });
-    // saveData();
+    saveData();
 }
 
 
