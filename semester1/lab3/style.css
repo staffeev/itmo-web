@@ -34,67 +34,67 @@ hr {
 
 /* colored tiles */
 
-.x2 {
+.tile2 {
     background-color: #eee4da;
     color: #727371;
 }
 
-.x4 {
+.tile4 {
     background-color: #ece0ca;
     color: #727371;
 }
 
-.x8 {
+.tile8 {
     background-color: #f4b17a;
     color: white;
 }
 
-.x16{
+.tile16{
     background-color: #f59575;
     color: white;
 }
 
-.x32{
+.tile32{
     background-color: #f57c5f;
     color: white;
 }
 
-.x64{
+.tile64{
     background-color: #f65d3b;
     color: white;
 }
 
-.x128{
+.tile128{
     background-color: #edce71;
     color: white;
 }
 
-.x256{
+.tile256{
     background-color: #edcc63;
     color: white;
 }
 
-.x512{
+.tile512{
     background-color: #edc651;
     color: white;
 }
 
-.x1024{
+.tile1024{
     background-color: #eec744;
     color: white;
 }
 
-.x2048{
+.tile2048{
     background-color: #ecc230;
     color: white;
 }
 
-.x4096 {
+.tile4096 {
     background-color: #fe3d3d;
     color: white;
 }
 
-.x8192 {
+.tile8192 {
     background-color: #ff2020;
     color: white;
 }
