@@ -1,24 +1,46 @@
 let matrix;
+let score = 0;
 const size = 4;
+const rotationRules = {
+  "Left": 0,
+  "Up": 1,
+  "Right": 2,
+  "Down": 3
+}
+const rotate90cw = (m) => m[0].map((_, i) => m.map(row => row[i]).reverse());
+const rotate90ccw = (m) => m[0].map((_, i) => m.map(row => row[row.length - 1 - i]));
+
 
 
 function updateTileHTML(tile, value) {
     tile.classList.value = "";
     tile.classList.add("tile");
     if (value == 0) {
-      return;
+       return;
     }
     tile.classList.add("tile" + value.toString());
     tile.textContent = value.toString();
 }
 
 
-function slide(row) {
+function updateAllTilesHTML() {
+    for (let row = 0; row < size; row++) {
+        for (let col = 0; col < size; col ++) {
+            tile = document.getElementById(row.toString() + col.toString());
+            updateTileHTML(tile, matrix[row][col]);
+        }
+    }
+}
+
+
+function slideRow(row) {
     row = row.filter(num => num != 0);
     for (let i = 0; i < size - 1; i++) {
         if (row[i] == row[i + 1]) {
             row[i] *= 2;
             row[i + 1] = 0;
+            //update score
+            score += row[i];
         }
     }
     row = row.filter(num => num != 0);
@@ -27,6 +49,21 @@ function slide(row) {
     }
     return row;
 }
+
+
+function slide(numRot) {
+    for (let i = 0; i < numRot; i++) {
+        rotate90ccw(matrix)
+    }
+    for (row = 0; row < size; row++) {
+        matrix[row] = slideRow(matrix[row]);
+    }
+    for (let i = 0; i < numRot; i++) {
+        rotate90cw(matrix)
+    }
+    updateAllTilesHTML();
+}
+
 
 
 function startGame() {
@@ -48,7 +85,12 @@ function startGame() {
 }
 
 
-
+document.addEventListener('keydown', (e) => {
+    if (e.code.startsWith("Arrow")) {
+        slide(rotationRules[e.code.slice(5)]);
+    }
+    document.getElementById("score").textContent = score;
+})
 
 
 window.onload = function() {
