@@ -95,13 +95,15 @@ function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=
 
 
 function updateTileHTML(tile, value) {
+    tile.style.visibility = 'visible';
     tile.classList.value = "";
     tile.classList.add("tile");
     tile.textContent = "";
     if (value == 0) {
        return;
     }
-    tile.classList.add("tile" + value.toString());
+    let class_value = (value >= 8192) ? "8192" : value.toString();
+    tile.classList.add("tile" + class_value);
     tile.textContent = value.toString();
 }
 
@@ -249,12 +251,14 @@ function slide(numRot) {
 
     for (let i = 0; i < numRot; i++) matrix = rotate90cw(matrix);
 
+
+
     setTimeout(() => {
         updateAllTilesHTML();
         undoBtn.disabled = false;
         saveGameState();
         if (checkGameOver()) showGameOverWindow();
-    }, 500);
+    }, 160);
 }
 
 
