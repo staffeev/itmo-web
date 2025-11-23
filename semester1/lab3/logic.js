@@ -2,6 +2,7 @@ let matrix;
 let prev_matrix;
 let leaderboard;
 let score = 0;
+let prev_score;
 const size = 4;
 const rotationRules = {
   "Left": 0,
@@ -11,7 +12,7 @@ const rotationRules = {
 }
 const rotate90cw = m => m[0].map((_, i) => m.map(row => row[i]).reverse());
 const rotate90ccw = m => m[0].map((_, i) => m.map(row => row[i])).reverse();
-let undoBtn, modal, messageEl, nameInput, saveBtn, restartBtn;
+let undoBtn, modal, messageEl, nameInput, saveBtn, restartBtn, tbody, score_field;
 
 
 function updateTileHTML(tile, value) {
@@ -49,31 +50,53 @@ function updateAllTilesHTML() {
 }
 
 
-function checkForEmpty() {
+function updateLeaderboardHTML() {
+    while (tbody.firstChild) {
+        tbody.removeChild(tbody.firstChild);
+    }
+    leaderboard.forEach(entry => {
+        let tr = document.createElement("tr");
+        // поля
+        let nameTd = document.createElement("td");
+        nameTd.textContent = entry.name;
+        let scoreTd = document.createElement("td");
+        scoreTd.textContent = entry.score;
+        let dateTd = document.createElement("td");
+        dateTd.textContent = entry.date;
+        // добавление
+        tr.appendChild(nameTd);
+        tr.appendChild(scoreTd);
+        tr.appendChild(dateTd);
+        tbody.appendChild(tr);
+    });
+}
+
+function getEmptyCells() {
+    let emptyCells = [];
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
-            if (matrix[row][col] == 0) {
-                return true;
-            }
+            if (matrix[row][col] === 0) emptyCells.push([row, col]);
         }
     }
-    return false;
+    return emptyCells;
 }
 
 
-function addTwo() {
-    if (!checkForEmpty()) {
-      return;
-    }
-    let created = false;
-    while (!created) {
-        let row = Math.floor(Math.random() * size);
-        let col = Math.floor(Math.random() * size);
-        if (matrix[row][col] != 0) continue;
+function spawnTiles(maxCount = 1, chanceForFour = 0.1) {
+    let emptyCells = getEmptyCells();
+
+    let count = 1;
+    if (maxCount == 2 && Math.random() < 0.2) count = 2;
+    if (maxCount == 3 && Math.random() < 0.05) count = 3;
+    count = Math.min(count, emptyCells.length);
+
+    for (let i = 0; i < count && emptyCells.length > 0; i++) {
+        let idx = Math.floor(Math.random() * emptyCells.length);
+        let [row, col] = emptyCells.splice(idx, 1)[0];
+        let value = Math.random() < chanceForFour ? 4 : 2;
+        matrix[row][col] = value;
         let tile = document.getElementById(row.toString() + col.toString());
-        updateTileHTML(tile, 2)
-        matrix[row][col] = 2;
-        created = true;
+        updateTileHTML(tile, value);
     }
     saveGameState();
 }
@@ -99,6 +122,7 @@ function slideRow(row) {
 
 function slide(numRot) {
     prev_matrix = matrix.slice();
+    prev_score = score;
     for (let i = 0; i < numRot; i++) {
         matrix = rotate90ccw(matrix)
     }
@@ -129,14 +153,16 @@ function restartGame() {
 
 function undoMove() {
     matrix = prev_matrix;
+    score = prev_score;
     updateAllTilesHTML();
     saveGameState(); 
     undoBtn.disabled = true;
+    score_field.textContent = score;
 }
 
 
 function checkGameOver() {
-    if (checkForEmpty()) return false;
+    if (getEmptyCells().length > 0) return false;
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
             if (col < size - 1 && matrix[row][col] === matrix[row][col + 1]) {
@@ -165,15 +191,11 @@ function saveGameResult() {
 
     leaderboard.sort((a, b) => b.score - a.score);
     leaderboard = leaderboard.slice(0, 10);
-
-    console.log(leaderboard);
-    
-
     messageEl.textContent = "Ваш рекорд сохранён!";
     nameInput.classList.add("hidden");
     saveBtn.classList.add("hidden");
+    updateLeaderboardHTML();
 }
-
 
 
 function saveGameState() {
@@ -181,6 +203,7 @@ function saveGameState() {
         matrix,
         prev_matrix,
         score,
+        prev_score,
         leaderboard
     };
     localStorage.setItem("gameState", JSON.stringify(state));
@@ -195,6 +218,7 @@ function loadGameState() {
     matrix = state.matrix;
     prev_matrix = state.prev_matrix;
     score = state.score;
+    prev_score = state.prev_score;
     leaderboard = state.leaderboard || [];
     return true;
 }
@@ -202,21 +226,23 @@ function loadGameState() {
 
 function startGame() {
     score = 0;
-    matrix = [
-        [2, 4, 8, 16],
-        [16, 8, 4, 2],
-        [2, 4, 8, 16],
-        [16, 8, 4, 2]
-    ]
     // matrix = [
-    //     [0, 0, 0, 0],
-    //     [0, 0, 0, 0],
-    //     [0, 0, 0, 0],
-    //     [0, 0, 0, 0],
+    //     [2, 4, 8, 16],
+    //     [16, 8, 4, 2],
+    //     [2, 4, 8, 16],
+    //     [16, 8, 4, 2]
     // ]
+    matrix = [
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+    ]
+    undoBtn.disabled = true;
     createTilesHTML();
-    addTwo();
-    addTwo();
+    spawnTiles(3, 0.1);
+    // addTwo();
+    // addTwo();
 }
 
 
@@ -224,9 +250,9 @@ document.addEventListener('keydown', (e) => {
     if (e.code.startsWith("Arrow")) {
         e.preventDefault()
         slide(rotationRules[e.code.slice(5)]);
-        addTwo();
+        spawnTiles(2, 0.1);
     }
-    document.getElementById("score").textContent = score;
+    score_field.textContent = score;
 })
 
 
@@ -258,19 +284,22 @@ window.onload = function() {
     nameInput = document.getElementById("playerNameInput");
     saveBtn = document.getElementById("saveScoreBtn");
     saveBtn.addEventListener("click", saveGameResult);
+    tbody = document.getElementById("leaderboardBody");
+    score_field = document.getElementById("score")
 
     saveBtn.disabled = true;
     nameInput.addEventListener("input", () => {
         saveBtn.disabled = nameInput.value.trim() === "";
     });
 
-    // startGame();
-    if (loadGameState()) {
-        createTilesHTML();
-        updateAllTilesHTML();
-        document.getElementById("score").textContent = score;
-    } else {
-        startGame();
-        saveGameState();
-    }
+    startGame();
+    // if (loadGameState()) {
+    //     createTilesHTML();
+    //     updateAllTilesHTML();
+    //     score_field.textContent = score;
+    // } else {
+    //     startGame();
+    //     saveGameState();
+    // }
+    updateLeaderboardHTML();
 }
