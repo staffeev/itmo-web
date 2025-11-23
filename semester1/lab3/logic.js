@@ -32,6 +32,35 @@ function updateAllTilesHTML() {
     }
 }
 
+function checkForEmpty() {
+    for (let row = 0; row < size; row++) {
+        for (let col = 0; col < size; col++) {
+            if (matrix[row][col] == 0) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
+function addTwo() {
+    if (!checkForEmpty()) {
+      return;
+    }
+    let created = false;
+    while (!created) {
+        let row = Math.floor(Math.random() * size);
+        let col = Math.floor(Math.random() * size);
+        if (matrix[row][col] != 0) continue;
+        let tile = document.getElementById(row.toString() + col.toString());
+        updateTileHTML(tile, 2)
+        matrix[row][col] = 2;
+        created = true;
+    }
+}
+
+
 
 function slideRow(row) {
     row = row.filter(num => num != 0);
@@ -68,16 +97,14 @@ function slide(numRot) {
 }
 
 
-
 function startGame() {
     matrix = [
-        [2, 2, 2, 0],
         [0, 0, 0, 0],
-        [0, 0, 2, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
         [0, 0, 0, 0]
     ]
     
-
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
             let tile = document.createElement("div");
@@ -86,6 +113,10 @@ function startGame() {
             document.getElementById("board").append(tile);
         }
     }
+
+    addTwo();
+    addTwo();
+
     
 }
 
@@ -94,6 +125,7 @@ document.addEventListener('keydown', (e) => {
     if (e.code.startsWith("Arrow")) {
         e.preventDefault()
         slide(rotationRules[e.code.slice(5)]);
+        addTwo();
     }
     document.getElementById("score").textContent = score;
 })
