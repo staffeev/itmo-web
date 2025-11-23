@@ -19,8 +19,8 @@ function updateTileHTML(tile, value) {
     tile.classList.value = "";
     tile.classList.add("tile");
     tile.textContent = "";
-    if (value == 0) {
-       return;
+    if (value === 0) {
+        return;
     }
     tile.classList.add("tile" + value.toString());
     tile.textContent = value.toString();
@@ -52,20 +52,6 @@ function createGrid() {
 }
 
 
-
-// function createTilesHTML() {
-//     document.getElementById("score").textContent = "0";
-//     for (let row = 0; row < size; row++) {
-//         for (let col = 0; col < size; col++) {
-//             let tile = document.createElement("div");
-//             tile.setAttribute("id", row.toString() + col.toString())
-//             updateTileHTML(tile, matrix[row][col]);
-//             document.getElementById("board").append(tile);
-//         }
-//     }
-// }
-
-
 function createTilesHTML() {
     document.getElementById("score").textContent = "0";
     for (let row = 0; row < size; row++) {
@@ -94,25 +80,6 @@ function updateAllTilesHTML() {
 }
 
 
-// function hideRealTiles() {
-//     for (let row = 0; row < size; row++) {
-//         for (let col = 0; col < size; col++) {
-//             const tile = document.getElementById(row.toString() + col.toString());
-//             tile.style.visibility = 'hidden';
-//         }
-//     }
-// }
-
-// function showRealTiles() {
-//     for (let row = 0; row < size; row++) {
-//         for (let col = 0; col < size; col++) {
-//             const tile = document.getElementById(row.toString() + col.toString());
-//             tile.style.visibility = 'visible';
-//         }
-//     }
-// }
-
-
 function updateLeaderboardHTML() {
     while (tbody.firstChild) {
         tbody.removeChild(tbody.firstChild);
@@ -136,47 +103,14 @@ function updateLeaderboardHTML() {
 
 
 function getTileCoord(row, col) {
-    const board = document.getElementById("board");
-    const boardRect = board.getBoundingClientRect();
     const tileSize = 90;
-    const gap = 6;
+    const gap = 10;
 
-    const left = boardRect.left + col * (tileSize + gap);
-    const top = boardRect.top + row * (tileSize + gap);
+    const left = col * (tileSize + gap);
+    const top  = row * (tileSize + gap);
+
     return { left, top };
 }
-
-// function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=false) {
-//     const board = document.getElementById("board");
-//     const anim = document.createElement("div");
-//     anim.textContent = value;
-//     anim.dataset.value = value;
-    
-//     let className = "moveTile";
-//     if (merged) className = "mergeTile";
-//     if (isNew) className = "newTile";
-//     anim.classList.add(className);
-//     board.appendChild(anim);
-
-//     const fromCoord = getTileCoord(fromRow, fromCol);
-//     const toCoord = getTileCoord(toRow, toCol);
-//     anim.style.left = fromCoord.left + "px";
-//     anim.style.top = fromCoord.top + "px";
-
-//     requestAnimationFrame(() => {
-//         anim.style.left = toCoord.left + "px";
-//         anim.style.top = toCoord.top + "px";
-//         if (isNew || merged) anim.classList.add("show");
-//     });
-
-//     setTimeout(() => {
-//         anim.remove();
-//         const tile = document.getElementById(toRow.toString() + toCol.toString());
-//         updateTileHTML(tile, value);
-//         showRealTiles();
-//     }, 500);
-// }
-
 
 
 function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=false) {
@@ -188,8 +122,9 @@ function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=
     anim.classList.add(isNew ? "newTile" : merged ? "mergeTile" : "moveTile");
 
     const realTile = document.getElementById(fromRow.toString() + fromCol.toString());
-    anim.style.backgroundColor = getComputedStyle(realTile).backgroundColor;
-    anim.style.color = getComputedStyle(realTile).color;
+    // anim.style.backgroundColor = getComputedStyle(realTile).backgroundColor;
+    // anim.style.color = getComputedStyle(realTile).color;
+    anim.classList.add("tile" + value);
 
     board.appendChild(anim);
 
@@ -208,16 +143,11 @@ function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=
 
     setTimeout(() => {
         anim.remove();
-        const targetTile = document.getElementById(toRow.toString() + toCol.toString());
-        updateTileHTML(targetTile, value);
+        // const targetTile = document.getElementById(toRow.toString() + toCol.toString());
+        // updateTileHTML(targetTile, value);
         targetTile.style.visibility = 'visible';
     }, 160);
 }
-
-
-
-
-
 
 
 function getEmptyCells() {
@@ -270,53 +200,6 @@ function slideRow(row) {
 }
 
 
-
-// function slide(numRot) {
-//     prev_matrix = matrix.map(r => [...r]);
-//     prev_score = score;
-//     hideRealTiles();
-//     for (let i = 0; i < numRot; i++) matrix = rotate90ccw(matrix);
-
-//     for (let row = 0; row < size; row++) {
-//         let originalRow = [...matrix[row]];
-//         let actions = []; // массив действий для анимации
-//         let merged = new Array(size).fill(false);
-
-//         let newRow = [];
-//         for (let col = 0; col < size; col++) {
-//             if (matrix[row][col] === 0) continue;
-//             let last = newRow.length - 1;
-//             if (last >= 0 && newRow[last] === matrix[row][col] && !merged[last]) {
-//                 newRow[last] *= 2;
-//                 score += newRow[last];
-//                 merged[last] = true;
-//                 actions.push({ fromCol: col, toCol: last, val: newRow[last], merged: true });
-//             } else {
-//                 newRow.push(matrix[row][col]);
-//                 actions.push({ fromCol: col, toCol: newRow.length - 1, val: matrix[row][col], merged: false });
-//             }
-//         }
-//         while (newRow.length < size) newRow.push(0);
-//         matrix[row] = newRow;
-
-//         actions.forEach(act => {
-//             if (act.fromCol !== act.toCol || act.merged) {
-//                 let [fromRowMapped, fromColMapped] = mapRotatedCoords(row, act.fromCol, numRot);
-//                 let [toRowMapped, toColMapped] = mapRotatedCoords(row, act.toCol, numRot);
-//                 animateTile(fromRowMapped, fromColMapped, toRowMapped, toColMapped, act.val, act.merged);
-//             }
-//         });
-//     }
-
-//     for (let i = 0; i < numRot; i++) matrix = rotate90cw(matrix);
-
-//     updateAllTilesHTML();
-//     undoBtn.disabled = false;
-//     saveGameState();
-//     if (checkGameOver()) showGameOverWindow();
-// }
-
-
 function slide(numRot) {
     prev_matrix = matrix.map(r => [...r]);
     prev_score = score;
@@ -360,7 +243,9 @@ function slide(numRot) {
     }
 
     tilesToHide.forEach(([r, c]) => {
-        const tile = document.getElementById(r.toString() + c.toString());
+        const [realR, realC] = mapRotatedCoords(r, c, numRot);
+
+        const tile = document.getElementById(realR.toString() + realC.toString());
         if (tile) tile.style.visibility = 'hidden';
     });
 
@@ -368,14 +253,16 @@ function slide(numRot) {
 
     setTimeout(() => {
         tilesToHide.forEach(([r, c]) => {
-            const tile = document.getElementById(r.toString() + c.toString());
+            const [realR, realC] = mapRotatedCoords(r, c, numRot);
+            const tile = document.getElementById(realR.toString() + realC.toString());
             if (tile) tile.style.visibility = 'visible';
         });
+
         updateAllTilesHTML();
         undoBtn.disabled = false;
         saveGameState();
         if (checkGameOver()) showGameOverWindow();
-    }, 500);
+    }, 160);
 }
 
 
@@ -386,8 +273,6 @@ function mapRotatedCoords(row, col, numRot) {
     }
     return [r, c];
 }
-
-
 
 
 function restartGame() {
@@ -474,12 +359,6 @@ function loadGameState() {
 
 function startGame() {
     score = 0;
-    // matrix = [
-    //     [2, 4, 8, 16],
-    //     [16, 8, 4, 2],
-    //     [2, 4, 8, 16],
-    //     [16, 8, 4, 2]
-    // ]
     matrix = [
         [0, 0, 0, 0],
         [0, 0, 0, 0],
@@ -489,8 +368,6 @@ function startGame() {
     undoBtn.disabled = true;
     createTilesHTML();
     spawnTiles(3, 0.1);
-    // addTwo();
-    // addTwo();
 }
 
 
