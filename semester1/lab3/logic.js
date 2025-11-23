@@ -40,6 +40,7 @@ function createTilesHTML() {
 }
 
 
+
 function updateAllTilesHTML() {
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col ++) {
@@ -70,6 +71,7 @@ function updateLeaderboardHTML() {
         tbody.appendChild(tr);
     });
 }
+
 
 function getEmptyCells() {
     let emptyCells = [];
@@ -128,7 +130,7 @@ function slide(numRot) {
     }
     for (let row = 0; row < size; row++) {
         let matrix_row = matrix[row]
-        matrix[row] = slideRow(matrix_row);
+        matrix[row] = slideRow(matrix_row, row);
     }
     for (let i = 0; i < numRot; i++) {
         matrix = rotate90cw(matrix)
@@ -291,7 +293,6 @@ window.onload = function() {
     nameInput.addEventListener("input", () => {
         saveBtn.disabled = nameInput.value.trim() === "";
     });
-
     startGame();
     // if (loadGameState()) {
     //     createTilesHTML();
