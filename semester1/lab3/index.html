@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="controls">
+        <button id="undoBtn" disabled="true">Отмена хода</button>
+        <button id="restartBtn">Начать заново</button>
+    </div>
+    <h2>Score: <span id="score">0</span></h2>
+    <div id="board">
+        <div class="grid"></div>
+    </div>
+    <h3>Лидерборд</h3>
+    <table id="leaderboardTable">
+        <thead>
+            <tr>
+                <th>Имя</th>
+                <th>Очки</th>
+                <th>Дата</th>
+            </tr>
+        </thead>
+        <tbody id="leaderboardBody"></tbody>
+    </table>
+
+    <div id="gameOverModal" class="modal hidden">
+        <div class="modal-content">
+            <p id="gameOverMessage">Игра окончена! Введите имя, чтобы сохранить результат:</p>
+            <input id="playerNameInput" type="text" placeholder="Ваше имя">
+            <button id="saveScoreBtn">Сохранить результат</button>
+            <button id="restartBtn2" class="restart">⟳ Начать заново</button>
+        </div>
+    </div>
+<script src="logic2.js"></script>
+</body>
+</html>
