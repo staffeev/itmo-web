@@ -1,5 +1,6 @@
 let matrix;
 let prev_matrix;
+let leaderboard;
 let score = 0;
 const size = 4;
 const rotationRules = {
@@ -10,7 +11,7 @@ const rotationRules = {
 }
 const rotate90cw = m => m[0].map((_, i) => m.map(row => row[i]).reverse());
 const rotate90ccw = m => m[0].map((_, i) => m.map(row => row[i])).reverse();
-let undoBtn;
+let undoBtn, modal, messageEl, nameInput, saveBtn, restartBtn;
 
 
 function updateTileHTML(tile, value) {
@@ -25,6 +26,19 @@ function updateTileHTML(tile, value) {
 }
 
 
+function createTilesHTML() {
+    document.getElementById("score").textContent = "0";
+    for (let row = 0; row < size; row++) {
+        for (let col = 0; col < size; col++) {
+            let tile = document.createElement("div");
+            tile.setAttribute("id", row.toString() + col.toString())
+            updateTileHTML(tile, matrix[row][col]);
+            document.getElementById("board").append(tile);
+        }
+    }
+}
+
+
 function updateAllTilesHTML() {
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col ++) {
@@ -33,6 +47,7 @@ function updateAllTilesHTML() {
         }
     }
 }
+
 
 function checkForEmpty() {
     for (let row = 0; row < size; row++) {
@@ -60,8 +75,8 @@ function addTwo() {
         matrix[row][col] = 2;
         created = true;
     }
+    saveGameState();
 }
-
 
 
 function slideRow(row) {
@@ -96,8 +111,9 @@ function slide(numRot) {
     }
     updateAllTilesHTML();
     undoBtn.disabled = false;
+    saveGameState();
     if (checkGameOver()) {
-        console.log("всё");
+        showGameOverWindow();
     }
 }
 
@@ -114,6 +130,7 @@ function restartGame() {
 function undoMove() {
     matrix = prev_matrix;
     updateAllTilesHTML();
+    saveGameState(); 
     undoBtn.disabled = true;
 }
 
@@ -130,35 +147,74 @@ function checkGameOver() {
             }
         }
     }
-
     return true;
 }
 
 
+function saveGameResult() {
+    let name = nameInput.value.trim();
+    if (name === "") return;
+
+    let date = new Date().toLocaleDateString("ru-RU");
+
+    leaderboard.push({
+        name: name,
+        score: score,
+        date: date
+    });
+
+    leaderboard.sort((a, b) => b.score - a.score);
+    leaderboard = leaderboard.slice(0, 10);
+
+    console.log(leaderboard);
+    
+
+    messageEl.textContent = "Ваш рекорд сохранён!";
+    nameInput.classList.add("hidden");
+    saveBtn.classList.add("hidden");
+}
+
+
+
+function saveGameState() {
+    const state = {
+        matrix,
+        prev_matrix,
+        score,
+        leaderboard
+    };
+    localStorage.setItem("gameState", JSON.stringify(state));
+}
+
+
+function loadGameState() {
+    const raw = localStorage.getItem("gameState");
+    if (!raw) return false;
+
+    let state = JSON.parse(raw);
+    matrix = state.matrix;
+    prev_matrix = state.prev_matrix;
+    score = state.score;
+    leaderboard = state.leaderboard || [];
+    return true;
+}
+
 
 function startGame() {
     score = 0;
-    // matrix = [
-    //     [2, 4, 8, 16],
-    //     [16, 8, 4, 2],
-    //     [2, 4, 8, 16],
-    //     [16, 8, 4, 2]
-    // ]
     matrix = [
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
+        [2, 4, 8, 16],
+        [16, 8, 4, 2],
+        [2, 4, 8, 16],
+        [16, 8, 4, 2]
     ]
-    document.getElementById("score").textContent = "0";
-    for (let row = 0; row < size; row++) {
-        for (let col = 0; col < size; col++) {
-            let tile = document.createElement("div");
-            tile.setAttribute("id", row.toString() + col.toString())
-            updateTileHTML(tile, matrix[row][col]);
-            document.getElementById("board").append(tile);
-        }
-    }
+    // matrix = [
+    //     [0, 0, 0, 0],
+    //     [0, 0, 0, 0],
+    //     [0, 0, 0, 0],
+    //     [0, 0, 0, 0],
+    // ]
+    createTilesHTML();
     addTwo();
     addTwo();
 }
@@ -174,9 +230,47 @@ document.addEventListener('keydown', (e) => {
 })
 
 
+function showGameOverWindow() {
+    messageEl.textContent = "Игра окончена! Введите имя, чтобы сохранить результат:";
+    nameInput.classList.remove("hidden");
+    saveBtn.disabled = nameInput.value.trim() === "";
+    saveBtn.classList.remove("hidden");
+    modal.classList.remove("hidden");
+}
+
+
+function hideGameOverWindow() {
+    modal.classList.add("hidden");
+}
+
+
 window.onload = function() {
     undoBtn = document.getElementById("undoBtn")
     undoBtn.addEventListener("click", undoMove);
     document.getElementById("restartBtn").addEventListener("click", restartGame);
-    startGame();
+    document.getElementById("restartBtn2").addEventListener("click", () => {
+        hideGameOverWindow();
+        restartGame();
+    });
+
+    modal = document.getElementById("gameOverModal");
+    messageEl = document.getElementById("gameOverMessage");
+    nameInput = document.getElementById("playerNameInput");
+    saveBtn = document.getElementById("saveScoreBtn");
+    saveBtn.addEventListener("click", saveGameResult);
+
+    saveBtn.disabled = true;
+    nameInput.addEventListener("input", () => {
+        saveBtn.disabled = nameInput.value.trim() === "";
+    });
+
+    // startGame();
+    if (loadGameState()) {
+        createTilesHTML();
+        updateAllTilesHTML();
+        document.getElementById("score").textContent = score;
+    } else {
+        startGame();
+        saveGameState();
+    }
 }

@@ -13,6 +13,17 @@
     </div>
     <h2>Score: <span id="score">0</span></h2>
     <div id="board"></div>
+    <h3>Лидерборд</h3>
+    <ol id="leaderboard"></ol>
+
+    <div id="gameOverModal" class="modal hidden">
+        <div class="modal-content">
+            <p id="gameOverMessage">Игра окончена! Введите имя, чтобы сохранить результат:</p>
+            <input id="playerNameInput" type="text" placeholder="Ваше имя">
+            <button id="saveScoreBtn">Сохранить результат</button>
+            <button id="restartBtn2" class="restart">⟳ Начать заново</button>
+        </div>
+    </div>
 <script src="logic.js"></script>
 </body>
 </html>
