@@ -1,4 +1,5 @@
 let matrix;
+let prev_matrix;
 let score = 0;
 const size = 4;
 const rotationRules = {
@@ -9,6 +10,7 @@ const rotationRules = {
 }
 const rotate90cw = m => m[0].map((_, i) => m.map(row => row[i]).reverse());
 const rotate90ccw = m => m[0].map((_, i) => m.map(row => row[i])).reverse();
+let undoBtn;
 
 
 function updateTileHTML(tile, value) {
@@ -82,7 +84,7 @@ function slideRow(row) {
 
 
 function slide(numRot) {
-
+    prev_matrix = matrix.slice();
     for (let i = 0; i < numRot; i++) {
         matrix = rotate90ccw(matrix)
     }
@@ -94,17 +96,19 @@ function slide(numRot) {
         matrix = rotate90cw(matrix)
     }
     updateAllTilesHTML();
+    undoBtn.disabled = false;
 }
 
 
 function startGame() {
+    score = 0;
     matrix = [
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [0, 0, 0, 0]
     ]
-    
+    document.getElementById("score").textContent = "0";
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
             let tile = document.createElement("div");
@@ -113,11 +117,8 @@ function startGame() {
             document.getElementById("board").append(tile);
         }
     }
-
     addTwo();
     addTwo();
-
-    
 }
 
 
@@ -131,6 +132,25 @@ document.addEventListener('keydown', (e) => {
 })
 
 
+function restartGame() {
+    board = document.getElementById("board")
+    while (board.firstChild) {
+        board.removeChild(board.firstChild);
+    }
+    startGame();
+}
+
+
+function undoMove() {
+    matrix = prev_matrix;
+    updateAllTilesHTML();
+    undoBtn.disabled = true;
+}
+
+
 window.onload = function() {
+    undoBtn = document.getElementById("undoBtn")
+    undoBtn.addEventListener("click", undoMove);
+    document.getElementById("restartBtn").addEventListener("click", restartGame);
     startGame();
 }
