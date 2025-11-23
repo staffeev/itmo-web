@@ -15,6 +15,83 @@ const rotate90ccw = m => m[0].map((_, i) => m.map(row => row[i])).reverse();
 let undoBtn, modal, messageEl, nameInput, saveBtn, restartBtn, tbody, score_field;
 
 
+// ------------------- АНИМАЦИЯ -------------------
+
+
+function createGrid() {
+    const board = document.getElementById("board");
+    const tileSize = 90;
+    const gap = 10;
+
+    for (let row = 0; row < size; row++) {
+        for (let col = 0; col < size; col++) {
+            const cell = document.createElement("div");
+            cell.classList.add("grid-cell");
+
+            // позиционируем точно под плиткой
+            const left = col * (tileSize + gap);
+            const top = row * (tileSize + gap);
+
+            cell.style.left = left + "px";
+            cell.style.top = top + "px";
+
+            board.appendChild(cell);
+        }
+    }
+}
+
+
+function getTileCoord(row, col) {
+    const board = document.getElementById("board");
+    const boardRect = board.getBoundingClientRect();
+    const tileSize = 90;
+    const gap = 6;
+
+    const left = boardRect.left + col * (tileSize + gap);
+    const top = boardRect.top + row * (tileSize + gap);
+    return { left, top };
+}
+
+
+function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=false) {
+    const board = document.getElementById("board");
+    const anim = document.createElement("div");
+    anim.textContent = value;
+    anim.dataset.value = value;
+
+    anim.classList.add(isNew ? "newTile" : merged ? "mergeTile" : "moveTile");
+
+    const realTile = document.getElementById(fromRow.toString() + fromCol.toString());
+    anim.style.backgroundColor = getComputedStyle(realTile).backgroundColor;
+    anim.style.color = getComputedStyle(realTile).color;
+
+    board.appendChild(anim);
+
+    realTile.style.visibility = 'hidden';
+
+    const fromCoord = getTileCoord(fromRow, fromCol);
+    const toCoord = getTileCoord(toRow, toCol);
+    anim.style.left = fromCoord.left + "px";
+    anim.style.top = fromCoord.top + "px";
+
+    requestAnimationFrame(() => {
+        anim.style.left = toCoord.left + "px";
+        anim.style.top = toCoord.top + "px";
+        if (isNew || merged) anim.classList.add("show");
+    });
+
+    setTimeout(() => {
+        anim.remove();
+        const targetTile = document.getElementById(toRow.toString() + toCol.toString());
+        updateTileHTML(targetTile, value);
+        targetTile.style.visibility = 'visible';
+    }, 160);
+}
+
+
+// ------------------- HTML -------------------
+
+
 function updateTileHTML(tile, value) {
     tile.classList.value = "";
     tile.classList.add("tile");
@@ -32,13 +109,17 @@ function createTilesHTML() {
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
             let tile = document.createElement("div");
-            tile.setAttribute("id", row.toString() + col.toString())
+            tile.setAttribute("id", row.toString() + col.toString());
+            tile.classList.add("tile");
             updateTileHTML(tile, matrix[row][col]);
+            tile.style.position = "absolute";
+            const coords = getTileCoord(row, col);
+            tile.style.left = coords.left + "px";
+            tile.style.top = coords.top + "px";
             document.getElementById("board").append(tile);
         }
     }
 }
-
 
 
 function updateAllTilesHTML() {
@@ -73,6 +154,9 @@ function updateLeaderboardHTML() {
 }
 
 
+// ------------------- МЕХАНИКА -------------------
+
+
 function getEmptyCells() {
     let emptyCells = [];
     for (let row = 0; row < size; row++) {
@@ -97,6 +181,7 @@ function spawnTiles(maxCount = 1, chanceForFour = 0.1) {
         let [row, col] = emptyCells.splice(idx, 1)[0];
         let value = Math.random() < chanceForFour ? 4 : 2;
         matrix[row][col] = value;
+        animateTile(row, col, row, col, value, false, true);
         let tile = document.getElementById(row.toString() + col.toString());
         updateTileHTML(tile, value);
     }
@@ -123,24 +208,73 @@ function slideRow(row) {
 
 
 function slide(numRot) {
-    prev_matrix = matrix.slice();
+    prev_matrix = matrix.map(r => [...r]);
     prev_score = score;
-    for (let i = 0; i < numRot; i++) {
-        matrix = rotate90ccw(matrix)
-    }
+
+    let tilesToHide = [];
+
+    for (let i = 0; i < numRot; i++) matrix = rotate90ccw(matrix);
+
     for (let row = 0; row < size; row++) {
-        let matrix_row = matrix[row]
-        matrix[row] = slideRow(matrix_row, row);
+        let actions = [];
+        let merged = new Array(size).fill(false);
+        let newRow = [];
+
+        for (let col = 0; col < size; col++) {
+            if (matrix[row][col] === 0) continue;
+
+            let last = newRow.length - 1;
+            if (last >= 0 && newRow[last] === matrix[row][col] && !merged[last]) {
+                newRow[last] *= 2;
+                score += newRow[last];
+                merged[last] = true;
+                actions.push({ fromCol: col, toCol: last, val: newRow[last], merged: true });
+                tilesToHide.push([row, col]);
+            } else {
+                newRow.push(matrix[row][col]);
+                actions.push({ fromCol: col, toCol: newRow.length - 1, val: matrix[row][col], merged: false });
+                if (col !== newRow.length - 1) tilesToHide.push([row, col]);
+            }
+        }
+
+        while (newRow.length < size) newRow.push(0);
+        matrix[row] = newRow;
+
+        actions.forEach(act => {
+            if (act.fromCol !== act.toCol || act.merged) {
+                let [fromRowMapped, fromColMapped] = mapRotatedCoords(row, act.fromCol, numRot);
+                let [toRowMapped, toColMapped] = mapRotatedCoords(row, act.toCol, numRot);
+                animateTile(fromRowMapped, fromColMapped, toRowMapped, toColMapped, act.val, act.merged);
+            }
+        });
     }
+
+    tilesToHide.forEach(([r, c]) => {
+        const tile = document.getElementById(r.toString() + c.toString());
+        if (tile) tile.style.visibility = 'hidden';
+    });
+
+    for (let i = 0; i < numRot; i++) matrix = rotate90cw(matrix);
+
+    setTimeout(() => {
+        tilesToHide.forEach(([r, c]) => {
+            const tile = document.getElementById(r.toString() + c.toString());
+            if (tile) tile.style.visibility = 'visible';
+        });
+        updateAllTilesHTML();
+        undoBtn.disabled = false;
+        saveGameState();
+        if (checkGameOver()) showGameOverWindow();
+    }, 500);
+}
+
+
+function mapRotatedCoords(row, col, numRot) {
+    let r = row, c = col;
     for (let i = 0; i < numRot; i++) {
-        matrix = rotate90cw(matrix)
+        [r, c] = [c, size - 1 - r];
     }
-    updateAllTilesHTML();
-    undoBtn.disabled = false;
-    saveGameState();
-    if (checkGameOver()) {
-        showGameOverWindow();
-    }
+    return [r, c];
 }
 
 
@@ -228,12 +362,6 @@ function loadGameState() {
 
 function startGame() {
     score = 0;
-    // matrix = [
-    //     [2, 4, 8, 16],
-    //     [16, 8, 4, 2],
-    //     [2, 4, 8, 16],
-    //     [16, 8, 4, 2]
-    // ]
     matrix = [
         [0, 0, 0, 0],
         [0, 0, 0, 0],
@@ -243,8 +371,6 @@ function startGame() {
     undoBtn.disabled = true;
     createTilesHTML();
     spawnTiles(3, 0.1);
-    // addTwo();
-    // addTwo();
 }
 
 
@@ -272,6 +398,9 @@ function hideGameOverWindow() {
 }
 
 
+// ------------------- ЗАГРУЗКА -------------------
+
+
 window.onload = function() {
     undoBtn = document.getElementById("undoBtn")
     undoBtn.addEventListener("click", undoMove);
@@ -293,6 +422,7 @@ window.onload = function() {
     nameInput.addEventListener("input", () => {
         saveBtn.disabled = nameInput.value.trim() === "";
     });
+    createGrid();
     startGame();
     // if (loadGameState()) {
     //     createTilesHTML();
