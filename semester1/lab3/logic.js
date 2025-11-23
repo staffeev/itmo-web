@@ -67,6 +67,7 @@ function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=
 
     board.appendChild(anim);
 
+    // Скрываем только ту плитку, которая ДВИГАЕТСЯ
     realTile.style.visibility = 'hidden';
 
     const fromCoord = getTileCoord(fromRow, fromCol);
@@ -87,6 +88,7 @@ function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=
         targetTile.style.visibility = 'visible';
     }, 160);
 }
+
 
 
 // ------------------- HTML -------------------
@@ -211,8 +213,6 @@ function slide(numRot) {
     prev_matrix = matrix.map(r => [...r]);
     prev_score = score;
 
-    let tilesToHide = [];
-
     for (let i = 0; i < numRot; i++) matrix = rotate90ccw(matrix);
 
     for (let row = 0; row < size; row++) {
@@ -229,11 +229,9 @@ function slide(numRot) {
                 score += newRow[last];
                 merged[last] = true;
                 actions.push({ fromCol: col, toCol: last, val: newRow[last], merged: true });
-                tilesToHide.push([row, col]);
             } else {
                 newRow.push(matrix[row][col]);
                 actions.push({ fromCol: col, toCol: newRow.length - 1, val: matrix[row][col], merged: false });
-                if (col !== newRow.length - 1) tilesToHide.push([row, col]);
             }
         }
 
@@ -249,18 +247,9 @@ function slide(numRot) {
         });
     }
 
-    tilesToHide.forEach(([r, c]) => {
-        const tile = document.getElementById(r.toString() + c.toString());
-        if (tile) tile.style.visibility = 'hidden';
-    });
-
     for (let i = 0; i < numRot; i++) matrix = rotate90cw(matrix);
 
     setTimeout(() => {
-        tilesToHide.forEach(([r, c]) => {
-            const tile = document.getElementById(r.toString() + c.toString());
-            if (tile) tile.style.visibility = 'visible';
-        });
         updateAllTilesHTML();
         undoBtn.disabled = false;
         saveGameState();
@@ -422,7 +411,7 @@ window.onload = function() {
     nameInput.addEventListener("input", () => {
         saveBtn.disabled = nameInput.value.trim() === "";
     });
-    createGrid();
+    // createGrid();
     startGame();
     // if (loadGameState()) {
     //     createTilesHTML();
