@@ -66,7 +66,6 @@ function addTwo() {
 
 function slideRow(row) {
     row = row.filter(num => num != 0);
-    console.log(row, row.length);
     for (let i = 0; i < row.length - 1; i++) {
         if ((row[i] === row[i + 1]) && row[i] != 0) {
             row[i] *= 2;
@@ -97,16 +96,59 @@ function slide(numRot) {
     }
     updateAllTilesHTML();
     undoBtn.disabled = false;
+    if (checkGameOver()) {
+        console.log("всё");
+    }
 }
+
+
+function restartGame() {
+    board = document.getElementById("board")
+    while (board.firstChild) {
+        board.removeChild(board.firstChild);
+    }
+    startGame();
+}
+
+
+function undoMove() {
+    matrix = prev_matrix;
+    updateAllTilesHTML();
+    undoBtn.disabled = true;
+}
+
+
+function checkGameOver() {
+    if (checkForEmpty()) return false;
+    for (let row = 0; row < size; row++) {
+        for (let col = 0; col < size; col++) {
+            if (col < size - 1 && matrix[row][col] === matrix[row][col + 1]) {
+                return false;
+            }
+            if (row < size - 1 && matrix[row][col] === matrix[row + 1][col]) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 
 
 function startGame() {
     score = 0;
+    // matrix = [
+    //     [2, 4, 8, 16],
+    //     [16, 8, 4, 2],
+    //     [2, 4, 8, 16],
+    //     [16, 8, 4, 2]
+    // ]
     matrix = [
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [0, 0, 0, 0],
-        [0, 0, 0, 0]
+        [0, 0, 0, 0],
     ]
     document.getElementById("score").textContent = "0";
     for (let row = 0; row < size; row++) {
@@ -130,22 +172,6 @@ document.addEventListener('keydown', (e) => {
     }
     document.getElementById("score").textContent = score;
 })
-
-
-function restartGame() {
-    board = document.getElementById("board")
-    while (board.firstChild) {
-        board.removeChild(board.firstChild);
-    }
-    startGame();
-}
-
-
-function undoMove() {
-    matrix = prev_matrix;
-    updateAllTilesHTML();
-    undoBtn.disabled = true;
-}
 
 
 window.onload = function() {
