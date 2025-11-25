@@ -33,6 +33,7 @@ button:hover:not(:disabled) {
     border: 6px solid #bbada0;
     margin: 0 auto;
     background-color: #cdc1b5;
+    position: relative;
 }
 
 .grid-cell {
@@ -147,8 +148,8 @@ button:hover:not(:disabled) {
     border-radius: 3px;
     box-sizing: border-box;
     z-index: 10;
-    transition: all 160ms ease-in-out;
-    color: white;
+    transition: all 250ms ease-in-out; /* чуть дольше для плавности */
+    color: white; /* по умолчанию, можно переопределять по value */
 }
 
 
@@ -188,3 +189,26 @@ th {
 td {
     background-color: #f9f6f2;
 }
+
+.moveTile, .mergeTile, .newTile {
+    transition: transform 250ms ease-in-out,
+                left 250ms ease-in-out,
+                top 250ms ease-in-out;
+}
+
+.newTile {
+    transform: scale(0);
+}
+
+.newTile.show {
+    transform: scale(1);
+}
+
+.mergeTile {
+    transform: scale(0);
+}
+
+.mergeTile.show {
+    transform: scale(1);
+}
+

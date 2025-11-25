@@ -42,15 +42,138 @@ function createGrid() {
 
 
 function getTileCoord(row, col) {
-    const board = document.getElementById("board");
-    const boardRect = board.getBoundingClientRect();
     const tileSize = 90;
-    const gap = 6;
+    const gap = 10; // одинаков с grid-cell
 
-    const left = boardRect.left + col * (tileSize + gap);
-    const top = boardRect.top + row * (tileSize + gap);
-    return { left, top };
+    return {
+        left: col * (tileSize + gap),
+        top:  row * (tileSize + gap)
+    };
 }
+
+
+
+// function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=false) {
+//     const board = document.getElementById("board");
+//     const anim = document.createElement("div");
+//     anim.textContent = value;
+//     anim.dataset.value = value;
+
+//     anim.classList.add(isNew ? "newTile" : merged ? "mergeTile" : "moveTile");
+
+//     const realTile = document.getElementById(fromRow.toString() + fromCol.toString());
+//     anim.style.backgroundColor = getComputedStyle(realTile).backgroundColor;
+//     anim.style.color = getComputedStyle(realTile).color;
+
+//     board.appendChild(anim);
+
+//     // Скрываем только ту плитку, которая ДВИГАЕТСЯ
+//     realTile.style.visibility = 'hidden';
+
+//     const fromCoord = getTileCoord(fromRow, fromCol);
+//     const toCoord = getTileCoord(toRow, toCol);
+//     anim.style.left = fromCoord.left + "px";
+//     anim.style.top = fromCoord.top + "px";
+
+//     requestAnimationFrame(() => {
+//         requestAnimationFrame(() => {
+//             anim.style.left = toCoord.left + "px";
+//             anim.style.top = toCoord.top + "px";
+//             if (isNew || merged) anim.classList.add("show");
+//         });
+//     });
+
+
+//     setTimeout(() => {
+//         anim.remove();
+//         const targetTile = document.getElementById(toRow.toString() + toCol.toString());
+//         targetTile.style.visibility = 'hidden';
+//         updateTileHTML(targetTile, value);
+//         targetTile.style.visibility = 'visible';
+//     }, 250);
+// }
+
+
+// function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=false) {
+//     const board = document.getElementById("board");
+//     const anim = document.createElement("div");
+//     anim.textContent = value;
+//     anim.dataset.value = value;
+
+//     // дать анимационной плитке тот же набор стилей, что у реальных
+//     anim.classList.add(isNew ? "newTile" : merged ? "mergeTile" : "moveTile");
+//     // добавим класс цвета (чтобы фон совпал)
+//     let class_value = (value >= 8192) ? "8192" : value.toString();
+//     anim.classList.add("tile" + class_value);
+
+//     const fromId = fromRow.toString() + fromCol.toString();
+//     const toId   = toRow.toString() + toCol.toString();
+//     const realFrom = document.getElementById(fromId);
+//     const realTo   = document.getElementById(toId);
+
+//     // Если реальных плиток нет (на случай ребута), просто создаём аним без копирования стилей
+//     if (realFrom) {
+//         const cs = getComputedStyle(realFrom);
+//         anim.style.backgroundColor = cs.backgroundColor;
+//         anim.style.color = cs.color;
+//     } else if (realTo) {
+//         const cs = getComputedStyle(realTo);
+//         anim.style.backgroundColor = cs.backgroundColor;
+//         anim.style.color = cs.color;
+//     }
+
+//     board.appendChild(anim);
+
+//     // позиционируем аним на месте from
+//     const fromCoord = getTileCoord(fromRow, fromCol);
+//     const toCoord   = getTileCoord(toRow, toCol);
+//     anim.style.left = fromCoord.left + "px";
+//     anim.style.top  = fromCoord.top + "px";
+
+//     // Скрываем только те реальные плитки, которые мешают визуалу:
+//     // - при слиянии прячем и from и to
+//     // - при обычном движении прячем только from
+//     if (realFrom) realFrom.style.visibility = 'hidden';
+//     if (merged && realTo) realTo.style.visibility = 'hidden';
+
+//     // гарантируем стартовую рамку для transition
+//     requestAnimationFrame(() => {
+//         requestAnimationFrame(() => {
+//             anim.style.left = toCoord.left + "px";
+//             anim.style.top  = toCoord.top  + "px";
+//             if (isNew || merged) anim.classList.add("show");
+//         });
+//     });
+
+//     // длительность должна совпадать с transition в CSS (у тебя 160–250ms). использую 250 для надёжности.
+//     const DURATION = 250;
+//     setTimeout(() => {
+//         // убираем аним и обновляем целевую плитку значением из матрицы
+//         anim.remove();
+
+//         const targetTile = document.getElementById(toId);
+//         if (targetTile) {
+//             // на всякий случай: прятать/обновлять/показывать строго после анимации
+//             targetTile.style.visibility = 'hidden';
+//             updateTileHTML(targetTile, value);
+//             targetTile.style.visibility = 'visible';
+//         }
+
+//         // для from: если from !== target и from всё ещё есть в DOM — очистим её (пусть скрытой)
+//         if (realFrom && realFrom !== targetTile) {
+//             // если в матрице на from уже 0 — оставим скрытой (updateAllTilesHTML восстановит вид при нужном значении)
+//             // чтобы не было "дыр" - явно вызовем updateTileHTML для from с текущим значением матрицы
+//             const fromR = Number(fromRow), fromC = Number(fromCol);
+//             const fromVal = matrix?.[fromR]?.[fromC] ?? 0;
+//             updateTileHTML(realFrom, fromVal);
+//             if (fromVal === 0) realFrom.style.visibility = 'hidden';
+//             else realFrom.style.visibility = 'visible';
+//         }
+
+//         // если мы прятали целевую плитку до анимации (merged), она сейчас уже заменена/показана
+//     }, DURATION);
+// }
+
 
 
 function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=false) {
@@ -61,47 +184,128 @@ function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=
 
     anim.classList.add(isNew ? "newTile" : merged ? "mergeTile" : "moveTile");
 
-    const realTile = document.getElementById(fromRow.toString() + fromCol.toString());
-    anim.style.backgroundColor = getComputedStyle(realTile).backgroundColor;
-    anim.style.color = getComputedStyle(realTile).color;
+    let class_value = (value >= 8192) ? "8192" : value.toString();
+    anim.classList.add("tile" + class_value);
+
+    const fromId = fromRow.toString() + fromCol.toString();
+    const toId   = toRow.toString() + toCol.toString();
+    const realFrom = document.getElementById(fromId);
+    const realTo   = document.getElementById(toId);
+
+    // копируем стиль только с from (или to, если from нет)
+    if (realFrom) {
+        const cs = getComputedStyle(realFrom);
+        anim.style.backgroundColor = cs.backgroundColor;
+        anim.style.color = cs.color;
+    } else if (realTo) {
+        const cs = getComputedStyle(realTo);
+        anim.style.backgroundColor = cs.backgroundColor;
+        anim.style.color = cs.color;
+    }
 
     board.appendChild(anim);
 
-    // Скрываем только ту плитку, которая ДВИГАЕТСЯ
-    realTile.style.visibility = 'hidden';
-
+    // стартовая позиция анимации
     const fromCoord = getTileCoord(fromRow, fromCol);
-    const toCoord = getTileCoord(toRow, toCol);
+    const toCoord   = getTileCoord(toRow, toCol);
     anim.style.left = fromCoord.left + "px";
-    anim.style.top = fromCoord.top + "px";
+    anim.style.top  = fromCoord.top + "px";
 
+    // прячем только from
+    if (realFrom) realFrom.style.visibility = 'hidden';
+
+    // анимация движения
     requestAnimationFrame(() => {
-        anim.style.left = toCoord.left + "px";
-        anim.style.top = toCoord.top + "px";
-        if (isNew || merged) anim.classList.add("show");
+        requestAnimationFrame(() => {
+            anim.style.left = toCoord.left + "px";
+            anim.style.top  = toCoord.top  + "px";
+            if (isNew || merged) anim.classList.add("show");
+        });
+    });
+
+    const DURATION = 250;
+    setTimeout(() => {
+        anim.remove();
+
+        // когда анимация закончена — обновляем целевую плитку
+        if (realTo) {
+            updateTileHTML(realTo, value);
+        }
+
+        // восстанавливаем from (если там осталась 0 — скрываем)
+        if (realFrom) {
+            const fromVal = matrix?.[fromRow]?.[fromCol] ?? 0;
+            updateTileHTML(realFrom, fromVal);
+            if (fromVal === 0) realFrom.style.visibility = 'hidden';
+        }
+    }, DURATION);
+}
+
+
+function animateNewTile(row, col, value) {
+    const board = document.getElementById("board");
+    const anim = document.createElement("div");
+    anim.textContent = value;
+    anim.dataset.value = value;
+
+    anim.classList.add("newTile");
+    let class_value = (value >= 8192) ? "8192" : value.toString();
+    anim.classList.add("tile" + class_value);
+
+    const coords = getTileCoord(row, col);
+    anim.style.position = "absolute";
+    anim.style.left = coords.left + "px";
+    anim.style.top  = coords.top  + "px";
+    anim.style.transform = "scale(0)";
+    anim.style.transition = "transform 250ms ease-out";
+
+    board.appendChild(anim);
+
+    // старт анимации через RAF
+    requestAnimationFrame(() => {
+        anim.style.transform = "scale(1)";
     });
 
     setTimeout(() => {
         anim.remove();
-        const targetTile = document.getElementById(toRow.toString() + toCol.toString());
-        updateTileHTML(targetTile, value);
-        targetTile.style.visibility = 'visible';
-    }, 160);
+        const tile = document.getElementById(row.toString() + col.toString());
+        if (tile) updateTileHTML(tile, value); // только теперь обновляем реальную плитку
+    }, 250);
 }
+
 
 
 
 // ------------------- HTML -------------------
 
 
+// function updateTileHTML(tile, value) {
+//     tile.style.visibility = 'visible';
+//     tile.classList.value = "";
+//     tile.classList.add("tile");
+//     tile.textContent = "";
+//     if (value == 0) {
+//        return;
+//     }
+//     let class_value = (value >= 8192) ? "8192" : value.toString();
+//     tile.classList.add("tile" + class_value);
+//     tile.textContent = value.toString();
+// }
+
+
 function updateTileHTML(tile, value) {
+    if (!tile) return;
+    // если value == 0 — прячем плитку, сбрасываем классы и текст
+    if (value === 0) {
+        tile.style.visibility = 'hidden';
+        tile.className = 'tile'; // сбросим все дополнительные классы
+        tile.textContent = '';
+        return;
+    }
+
     tile.style.visibility = 'visible';
     tile.classList.value = "";
     tile.classList.add("tile");
-    tile.textContent = "";
-    if (value == 0) {
-       return;
-    }
     let class_value = (value >= 8192) ? "8192" : value.toString();
     tile.classList.add("tile" + class_value);
     tile.textContent = value.toString();
@@ -185,9 +389,11 @@ function spawnTiles(maxCount = 1, chanceForFour = 0.1) {
         let [row, col] = emptyCells.splice(idx, 1)[0];
         let value = Math.random() < chanceForFour ? 4 : 2;
         matrix[row][col] = value;
-        animateTile(row, col, row, col, value, false, true);
-        let tile = document.getElementById(row.toString() + col.toString());
-        updateTileHTML(tile, value);
+        animateNewTile(row, col, value);
+
+        // animateTile(row, col, row, col, value, false, true);
+        // let tile = document.getElementById(row.toString() + col.toString());
+        // updateTileHTML(tile, value);
     }
     saveGameState();
 }
@@ -258,7 +464,7 @@ function slide(numRot) {
         undoBtn.disabled = false;
         saveGameState();
         if (checkGameOver()) showGameOverWindow();
-    }, 160);
+    }, 250);
 }
 
 
