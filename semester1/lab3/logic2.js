@@ -244,34 +244,41 @@ function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=
 
 function animateNewTile(row, col, value) {
     const board = document.getElementById("board");
+    const tile = document.getElementById(row.toString() + col.toString());
+    if (tile) tile.style.visibility = 'hidden'; // Скрываем плитку сразу
+
     const anim = document.createElement("div");
     anim.textContent = value;
     anim.dataset.value = value;
-
-    anim.classList.add("newTile");
-    let class_value = (value >= 8192) ? "8192" : value.toString();
+    anim.classList.add("tile", "newTile"); // Классы для стилей
+    const class_value = (value >= 8192) ? "8192" : value.toString();
     anim.classList.add("tile" + class_value);
 
     const coords = getTileCoord(row, col);
     anim.style.position = "absolute";
     anim.style.left = coords.left + "px";
-    anim.style.top  = coords.top  + "px";
+    anim.style.top = coords.top + "px";
     anim.style.transform = "scale(0)";
-    anim.style.transition = "transform 250ms ease-out";
+    anim.style.transition = "transform 200ms ease-out";
 
     board.appendChild(anim);
 
-    // старт анимации через RAF
+    // Запускаем анимацию через RAF
     requestAnimationFrame(() => {
         anim.style.transform = "scale(1)";
     });
 
+    // Через 200-250мс обновляем реальную плитку и удаляем анимацию
     setTimeout(() => {
         anim.remove();
-        const tile = document.getElementById(row.toString() + col.toString());
-        if (tile) updateTileHTML(tile, value); // только теперь обновляем реальную плитку
+        if (tile) {
+            updateTileHTML(tile, value);
+            tile.style.visibility = 'visible';
+        }
     }, 250);
 }
+
+
 
 
 
@@ -312,6 +319,24 @@ function updateTileHTML(tile, value) {
 }
 
 
+// function createTilesHTML() {
+//     document.getElementById("score").textContent = "0";
+//     for (let row = 0; row < size; row++) {
+//         for (let col = 0; col < size; col++) {
+//             let tile = document.createElement("div");
+//             tile.setAttribute("id", row.toString() + col.toString());
+//             tile.classList.add("tile");
+//             updateTileHTML(tile, matrix[row][col]);
+//             tile.style.position = "absolute";
+//             const coords = getTileCoord(row, col);
+//             tile.style.left = coords.left + "px";
+//             tile.style.top = coords.top + "px";
+//             document.getElementById("board").append(tile);
+//         }
+//     }
+// }
+
+
 function createTilesHTML() {
     document.getElementById("score").textContent = "0";
     for (let row = 0; row < size; row++) {
@@ -319,15 +344,18 @@ function createTilesHTML() {
             let tile = document.createElement("div");
             tile.setAttribute("id", row.toString() + col.toString());
             tile.classList.add("tile");
-            updateTileHTML(tile, matrix[row][col]);
             tile.style.position = "absolute";
             const coords = getTileCoord(row, col);
             tile.style.left = coords.left + "px";
             tile.style.top = coords.top + "px";
+
+            // ВСЕ плитки невидимы до анимации
+            tile.style.visibility = 'hidden';
             document.getElementById("board").append(tile);
         }
     }
 }
+
 
 
 function updateAllTilesHTML() {
@@ -376,9 +404,31 @@ function getEmptyCells() {
 }
 
 
+// function spawnTiles(maxCount = 1, chanceForFour = 0.1) {
+//     let emptyCells = getEmptyCells();
+
+//     let count = 1;
+//     if (maxCount == 2 && Math.random() < 0.2) count = 2;
+//     if (maxCount == 3 && Math.random() < 0.05) count = 3;
+//     count = Math.min(count, emptyCells.length);
+
+//     for (let i = 0; i < count && emptyCells.length > 0; i++) {
+//         let idx = Math.floor(Math.random() * emptyCells.length);
+//         let [row, col] = emptyCells.splice(idx, 1)[0];
+//         let value = Math.random() < chanceForFour ? 4 : 2;
+//         matrix[row][col] = value;
+//         animateNewTile(row, col, value);
+
+//         // animateTile(row, col, row, col, value, false, true);
+//         // let tile = document.getElementById(row.toString() + col.toString());
+//         // updateTileHTML(tile, value);
+//     }
+//     saveGameState();
+// }
+
+
 function spawnTiles(maxCount = 1, chanceForFour = 0.1) {
     let emptyCells = getEmptyCells();
-
     let count = 1;
     if (maxCount == 2 && Math.random() < 0.2) count = 2;
     if (maxCount == 3 && Math.random() < 0.05) count = 3;
@@ -389,14 +439,44 @@ function spawnTiles(maxCount = 1, chanceForFour = 0.1) {
         let [row, col] = emptyCells.splice(idx, 1)[0];
         let value = Math.random() < chanceForFour ? 4 : 2;
         matrix[row][col] = value;
-        animateNewTile(row, col, value);
 
-        // animateTile(row, col, row, col, value, false, true);
-        // let tile = document.getElementById(row.toString() + col.toString());
-        // updateTileHTML(tile, value);
+        // Важно: реальная плитка остаётся скрытой до конца анимации
+        const realTile = document.getElementById(row.toString() + col.toString());
+        if (realTile) realTile.style.visibility = 'hidden';
+
+        // Запускаем анимацию
+        const anim = document.createElement("div");
+        anim.textContent = value;
+        anim.dataset.value = value;
+        anim.classList.add("tile", "newTile");
+        const class_value = (value >= 8192) ? "8192" : value.toString();
+        anim.classList.add("tile" + class_value);
+
+        const coords = getTileCoord(row, col);
+        anim.style.position = "absolute";
+        anim.style.left = coords.left + "px";
+        anim.style.top = coords.top + "px";
+        anim.style.transform = "scale(0)";
+        anim.style.transition = "transform 200ms ease-out";
+
+        document.getElementById("board").appendChild(anim);
+
+        requestAnimationFrame(() => {
+            anim.style.transform = "scale(1)";
+        });
+
+        setTimeout(() => {
+            anim.remove();
+            if (realTile) {
+                updateTileHTML(realTile, value);
+                realTile.style.visibility = 'visible';
+            }
+        }, 250);
     }
+
     saveGameState();
 }
+
 
 
 function slideRow(row) {
@@ -415,6 +495,57 @@ function slideRow(row) {
     } 
     return row;
 }
+
+
+// function slide(numRot) {
+//     prev_matrix = matrix.map(r => [...r]);
+//     prev_score = score;
+
+//     for (let i = 0; i < numRot; i++) matrix = rotate90ccw(matrix);
+
+//     for (let row = 0; row < size; row++) {
+//         let actions = [];
+//         let merged = new Array(size).fill(false);
+//         let newRow = [];
+
+//         for (let col = 0; col < size; col++) {
+//             if (matrix[row][col] === 0) continue;
+
+//             let last = newRow.length - 1;
+//             if (last >= 0 && newRow[last] === matrix[row][col] && !merged[last]) {
+//                 newRow[last] *= 2;
+//                 score += newRow[last];
+//                 merged[last] = true;
+//                 actions.push({ fromCol: col, toCol: last, val: newRow[last], merged: true });
+//             } else {
+//                 newRow.push(matrix[row][col]);
+//                 actions.push({ fromCol: col, toCol: newRow.length - 1, val: matrix[row][col], merged: false });
+//             }
+//         }
+
+//         while (newRow.length < size) newRow.push(0);
+//         matrix[row] = newRow;
+
+//         actions.forEach(act => {
+//             if (act.fromCol !== act.toCol || act.merged) {
+//                 let [fromRowMapped, fromColMapped] = mapRotatedCoords(row, act.fromCol, numRot);
+//                 let [toRowMapped, toColMapped] = mapRotatedCoords(row, act.toCol, numRot);
+//                 animateTile(fromRowMapped, fromColMapped, toRowMapped, toColMapped, act.val, act.merged);
+//             }
+//         });
+//     }
+
+//     for (let i = 0; i < numRot; i++) matrix = rotate90cw(matrix);
+
+
+
+//     setTimeout(() => {
+//         updateAllTilesHTML();
+//         undoBtn.disabled = false;
+//         saveGameState();
+//         if (checkGameOver()) showGameOverWindow();
+//     }, 250);
+// }
 
 
 function slide(numRot) {
@@ -457,15 +588,17 @@ function slide(numRot) {
 
     for (let i = 0; i < numRot; i++) matrix = rotate90cw(matrix);
 
-
-
+    // ---- ВАЖНО: спавним плитки только после завершения анимации ----
+    const DURATION = 250;
     setTimeout(() => {
         updateAllTilesHTML();
         undoBtn.disabled = false;
         saveGameState();
+        spawnTiles(2, 0.1); // <- теперь новые плитки появляются после анимации
         if (checkGameOver()) showGameOverWindow();
-    }, 250);
+    }, DURATION);
 }
+
 
 
 function mapRotatedCoords(row, col, numRot) {
@@ -577,7 +710,7 @@ document.addEventListener('keydown', (e) => {
     if (e.code.startsWith("Arrow")) {
         e.preventDefault()
         slide(rotationRules[e.code.slice(5)]);
-        spawnTiles(2, 0.1);
+        // spawnTiles(2, 0.1);
     }
     score_field.textContent = score;
 })
