@@ -603,6 +603,7 @@ function slide(numRot) {
 
 
 
+
 function mapRotatedCoords(row, col, numRot) {
     let r = row, c = col;
     for (let i = 0; i < numRot; i++) {
