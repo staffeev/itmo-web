@@ -594,7 +594,9 @@ function slide(numRot) {
         updateAllTilesHTML();
         undoBtn.disabled = false;
         saveGameState();
-        spawnTiles(2, 0.1); // <- теперь новые плитки появляются после анимации
+        if (JSON.stringify(prev_matrix) !== JSON.stringify(matrix)) {
+            spawnTiles(2, 0.1); // <- теперь новые плитки появляются после анимации
+        }
         if (checkGameOver()) showGameOverWindow();
     }, DURATION);
 }
