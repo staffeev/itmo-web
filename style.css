@@ -162,8 +162,8 @@ button:hover:not(:disabled) {
     border-radius: 3px;
     box-sizing: border-box;
     z-index: 10;
-    transition: all 250ms ease-in-out; /* чуть дольше для плавности */
-    color: white; /* по умолчанию, можно переопределять по value */
+    transition: all 250ms ease-in-out;
+    color: white;
 }
 
 
@@ -269,5 +269,3 @@ td {
         transform: scale(0.6);
     }
 }
-
-

@@ -128,7 +128,7 @@ function animateNewTile(row, col, value) {
     anim.style.left = coords.left + "px";
     anim.style.top = coords.top + "px";
     anim.style.transform = "scale(0)";
-    anim.style.transition = "transform 200ms ease-out";
+    anim.style.transition = "transform 250ms ease-out";
 
     board.appendChild(anim);
 
@@ -278,67 +278,24 @@ function getEmptyCells() {
 function spawnTiles(maxCount = 1, chanceForFour = 0.1) {
     let emptyCells = getEmptyCells();
     let count = 1;
-    if (maxCount == 2 && Math.random() < 0.2) count = 2;
-    if (maxCount == 3 && Math.random() < 0.05) count = 3;
+
+    if (maxCount === 2 && Math.random() < 0.2) count = 2;
+    if (maxCount === 3 && Math.random() < 0.05) count = 3;
+
     count = Math.min(count, emptyCells.length);
 
-    for (let i = 0; i < count && emptyCells.length > 0; i++) {
+    for (let i = 0; i < count; i++) {
         let idx = Math.floor(Math.random() * emptyCells.length);
         let [row, col] = emptyCells.splice(idx, 1)[0];
         let value = Math.random() < chanceForFour ? 4 : 2;
+
         matrix[row][col] = value;
-
-        let realTile = document.getElementById(row.toString() + col.toString());
-        if (realTile) realTile.style.visibility = 'hidden';
-
-        let anim = document.createElement("div");
-        anim.textContent = value;
-        anim.dataset.value = value;
-        anim.classList.add("tile", "newTile");
-        let class_value = (value >= 8192) ? "8192" : value.toString();
-        anim.classList.add("tile" + class_value);
-
-        let coords = getTileCoord(row, col);
-        anim.style.position = "absolute";
-        anim.style.left = coords.left + "px";
-        anim.style.top = coords.top + "px";
-        anim.style.transform = "scale(0)";
-        anim.style.transition = "transform 200ms ease-out";
-
-        document.getElementById("board").appendChild(anim);
-
-        requestAnimationFrame(() => {
-            anim.style.transform = "scale(1)";
-        });
-
-        setTimeout(() => {
-            anim.remove();
-            if (realTile) {
-                updateTileHTML(realTile, value);
-                realTile.style.visibility = 'visible';
-            }
-        }, ANIMATION_DURATION);
+        animateNewTile(row, col, value);
     }
 
     saveGameState();
 }
 
-
-function slideRow(row) {
-    row = row.filter(num => num != 0);
-    for (let i = 0; i < row.length - 1; i++) {
-        if ((row[i] === row[i + 1]) && row[i] != 0) {
-            row[i] *= 2;
-            row[i + 1] = 0;
-            score += row[i];
-        }
-    }
-    row = row.filter(num => num != 0);
-    while (row.length != size) {
-        row.push(0);
-    } 
-    return row;
-}
 
 
 function slide(numRot) {
@@ -386,7 +343,7 @@ function slide(numRot) {
         undoBtn.disabled = false;
         saveGameState();
         if (JSON.stringify(prev_matrix) !== JSON.stringify(matrix)) {
-            spawnTiles(2, 0.1); // <- теперь новые плитки появляются после анимации
+            spawnTiles(2, 0.1);
         }
         if (checkGameOver()) showGameOverWindow();
     }, ANIMATION_DURATION);
