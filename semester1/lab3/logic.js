@@ -4,6 +4,7 @@ let leaderboard;
 let score = 0;
 let prev_score;
 const size = 4;
+const ANIMATION_DURATION = 250;
 const rotationRules = {
   "Left": 0,
   "Up": 1,
@@ -19,37 +20,32 @@ let undoBtn, modal, messageEl, nameInput, saveBtn, restartBtn, tbody, score_fiel
 
 
 function createGrid() {
-    const board = document.getElementById("board");
-    const tileSize = 90;
-    const gap = 10;
-
+    const grid = document.querySelector("#board .grid");
+    if (!grid) return;
+    while (grid.firstChild) {
+        grid.removeChild(grid.firstChild);
+    }
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
             const cell = document.createElement("div");
             cell.classList.add("grid-cell");
-
-            // позиционируем точно под плиткой
-            const left = col * (tileSize + gap);
-            const top = row * (tileSize + gap);
-
-            cell.style.left = left + "px";
-            cell.style.top = top + "px";
-
-            board.appendChild(cell);
+            const coords = getTileCoord(row, col);
+            cell.style.left = coords.left + "px";
+            cell.style.top  = coords.top  + "px";
+            grid.appendChild(cell);
         }
     }
 }
 
 
 function getTileCoord(row, col) {
-    const board = document.getElementById("board");
-    const boardRect = board.getBoundingClientRect();
     const tileSize = 90;
-    const gap = 6;
-
-    const left = boardRect.left + col * (tileSize + gap);
-    const top = boardRect.top + row * (tileSize + gap);
-    return { left, top };
+    const gap = 10;
+    const offset = gap / 2;
+    return {
+        left: offset + col * (tileSize + gap),
+        top:  offset + row * (tileSize + gap)
+    };
 }
 
 
@@ -61,47 +57,103 @@ function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=
 
     anim.classList.add(isNew ? "newTile" : merged ? "mergeTile" : "moveTile");
 
-    const realTile = document.getElementById(fromRow.toString() + fromCol.toString());
-    anim.style.backgroundColor = getComputedStyle(realTile).backgroundColor;
-    anim.style.color = getComputedStyle(realTile).color;
+    let class_value = (value >= 8192) ? "8192" : value.toString();
+    anim.classList.add("tile" + class_value);
 
+    const fromId = fromRow.toString() + fromCol.toString();
+    const toId   = toRow.toString() + toCol.toString();
+    const realFrom = document.getElementById(fromId);
+    const realTo   = document.getElementById(toId);
+
+    if (realFrom) {
+        const cs = getComputedStyle(realFrom);
+        anim.style.backgroundColor = cs.backgroundColor;
+        anim.style.color = cs.color;
+    } else if (realTo) {
+        const cs = getComputedStyle(realTo);
+        anim.style.backgroundColor = cs.backgroundColor;
+        anim.style.color = cs.color;
+    }
     board.appendChild(anim);
-
-    // Скрываем только ту плитку, которая ДВИГАЕТСЯ
-    realTile.style.visibility = 'hidden';
-
     const fromCoord = getTileCoord(fromRow, fromCol);
-    const toCoord = getTileCoord(toRow, toCol);
+    const toCoord   = getTileCoord(toRow, toCol);
     anim.style.left = fromCoord.left + "px";
-    anim.style.top = fromCoord.top + "px";
+    anim.style.top  = fromCoord.top + "px";
+
+    if (realFrom) realFrom.style.visibility = 'hidden';
 
     requestAnimationFrame(() => {
-        anim.style.left = toCoord.left + "px";
-        anim.style.top = toCoord.top + "px";
-        if (isNew || merged) anim.classList.add("show");
+        requestAnimationFrame(() => {
+            anim.style.left = toCoord.left + "px";
+            anim.style.top  = toCoord.top  + "px";
+            if (isNew || merged) anim.classList.add("show");
+        });
     });
 
     setTimeout(() => {
         anim.remove();
-        const targetTile = document.getElementById(toRow.toString() + toCol.toString());
-        updateTileHTML(targetTile, value);
-        targetTile.style.visibility = 'visible';
-    }, 160);
+        if (realTo) {
+            updateTileHTML(realTo, value);
+        }
+        if (realFrom) {
+            const fromVal = matrix?.[fromRow]?.[fromCol] ?? 0;
+            updateTileHTML(realFrom, fromVal);
+            if (fromVal === 0) realFrom.style.visibility = 'hidden';
+        }
+    }, ANIMATION_DURATION);
 }
 
+
+function animateNewTile(row, col, value) {
+    const board = document.getElementById("board");
+    const tile = document.getElementById(row.toString() + col.toString());
+    if (tile) tile.style.visibility = 'hidden';
+
+    const anim = document.createElement("div");
+    anim.textContent = value;
+    anim.dataset.value = value;
+    anim.classList.add("tile", "newTile");
+    const class_value = (value >= 8192) ? "8192" : value.toString();
+    anim.classList.add("tile" + class_value);
+
+    const coords = getTileCoord(row, col);
+    anim.style.position = "absolute";
+    anim.style.left = coords.left + "px";
+    anim.style.top = coords.top + "px";
+    anim.style.transform = "scale(0)";
+    anim.style.transition = "transform 200ms ease-out";
+
+    board.appendChild(anim);
+
+    requestAnimationFrame(() => {
+        anim.style.transform = "scale(1)";
+    });
+
+    setTimeout(() => {
+        anim.remove();
+        if (tile) {
+            updateTileHTML(tile, value);
+            tile.style.visibility = 'visible';
+        }
+    }, ANIMATION_DURATION);
+}
 
 
 // ------------------- HTML -------------------
 
 
 function updateTileHTML(tile, value) {
+    if (!tile) return;
+    if (value === 0) {
+        tile.style.visibility = 'hidden';
+        tile.className = 'tile';
+        tile.textContent = '';
+        return;
+    }
+
     tile.style.visibility = 'visible';
     tile.classList.value = "";
     tile.classList.add("tile");
-    tile.textContent = "";
-    if (value == 0) {
-       return;
-    }
     let class_value = (value >= 8192) ? "8192" : value.toString();
     tile.classList.add("tile" + class_value);
     tile.textContent = value.toString();
@@ -109,17 +161,18 @@ function updateTileHTML(tile, value) {
 
 
 function createTilesHTML() {
+    createGrid();
     document.getElementById("score").textContent = "0";
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
             let tile = document.createElement("div");
             tile.setAttribute("id", row.toString() + col.toString());
             tile.classList.add("tile");
-            updateTileHTML(tile, matrix[row][col]);
             tile.style.position = "absolute";
             const coords = getTileCoord(row, col);
             tile.style.left = coords.left + "px";
             tile.style.top = coords.top + "px";
+            tile.style.visibility = 'hidden';
             document.getElementById("board").append(tile);
         }
     }
@@ -142,14 +195,12 @@ function updateLeaderboardHTML() {
     }
     leaderboard.forEach(entry => {
         let tr = document.createElement("tr");
-        // поля
         let nameTd = document.createElement("td");
         nameTd.textContent = entry.name;
         let scoreTd = document.createElement("td");
         scoreTd.textContent = entry.score;
         let dateTd = document.createElement("td");
         dateTd.textContent = entry.date;
-        // добавление
         tr.appendChild(nameTd);
         tr.appendChild(scoreTd);
         tr.appendChild(dateTd);
@@ -174,7 +225,6 @@ function getEmptyCells() {
 
 function spawnTiles(maxCount = 1, chanceForFour = 0.1) {
     let emptyCells = getEmptyCells();
-
     let count = 1;
     if (maxCount == 2 && Math.random() < 0.2) count = 2;
     if (maxCount == 3 && Math.random() < 0.05) count = 3;
@@ -185,10 +235,39 @@ function spawnTiles(maxCount = 1, chanceForFour = 0.1) {
         let [row, col] = emptyCells.splice(idx, 1)[0];
         let value = Math.random() < chanceForFour ? 4 : 2;
         matrix[row][col] = value;
-        animateTile(row, col, row, col, value, false, true);
-        let tile = document.getElementById(row.toString() + col.toString());
-        updateTileHTML(tile, value);
+
+        const realTile = document.getElementById(row.toString() + col.toString());
+        if (realTile) realTile.style.visibility = 'hidden';
+
+        const anim = document.createElement("div");
+        anim.textContent = value;
+        anim.dataset.value = value;
+        anim.classList.add("tile", "newTile");
+        const class_value = (value >= 8192) ? "8192" : value.toString();
+        anim.classList.add("tile" + class_value);
+
+        const coords = getTileCoord(row, col);
+        anim.style.position = "absolute";
+        anim.style.left = coords.left + "px";
+        anim.style.top = coords.top + "px";
+        anim.style.transform = "scale(0)";
+        anim.style.transition = "transform 200ms ease-out";
+
+        document.getElementById("board").appendChild(anim);
+
+        requestAnimationFrame(() => {
+            anim.style.transform = "scale(1)";
+        });
+
+        setTimeout(() => {
+            anim.remove();
+            if (realTile) {
+                updateTileHTML(realTile, value);
+                realTile.style.visibility = 'visible';
+            }
+        }, ANIMATION_DURATION);
     }
+
     saveGameState();
 }
 
@@ -199,7 +278,6 @@ function slideRow(row) {
         if ((row[i] === row[i + 1]) && row[i] != 0) {
             row[i] *= 2;
             row[i + 1] = 0;
-            //update score
             score += row[i];
         }
     }
@@ -251,14 +329,15 @@ function slide(numRot) {
 
     for (let i = 0; i < numRot; i++) matrix = rotate90cw(matrix);
 
-
-
     setTimeout(() => {
         updateAllTilesHTML();
         undoBtn.disabled = false;
         saveGameState();
+        if (JSON.stringify(prev_matrix) !== JSON.stringify(matrix)) {
+            spawnTiles(2, 0.1); // <- теперь новые плитки появляются после анимации
+        }
         if (checkGameOver()) showGameOverWindow();
-    }, 160);
+    }, ANIMATION_DURATION);
 }
 
 
@@ -272,12 +351,16 @@ function mapRotatedCoords(row, col, numRot) {
 
 
 function restartGame() {
-    board = document.getElementById("board")
-    while (board.firstChild) {
-        board.removeChild(board.firstChild);
-    }
+    const board = document.getElementById("board");
+    Array.from(board.children).forEach(child => {
+        if (!child.classList.contains("grid")) {
+            board.removeChild(child);
+        }
+    });
+
     startGame();
 }
+
 
 
 function undoMove() {
@@ -371,7 +454,6 @@ document.addEventListener('keydown', (e) => {
     if (e.code.startsWith("Arrow")) {
         e.preventDefault()
         slide(rotationRules[e.code.slice(5)]);
-        spawnTiles(2, 0.1);
     }
     score_field.textContent = score;
 })
@@ -415,15 +497,67 @@ window.onload = function() {
     nameInput.addEventListener("input", () => {
         saveBtn.disabled = nameInput.value.trim() === "";
     });
-    // createGrid();
-    startGame();
-    // if (loadGameState()) {
-    //     createTilesHTML();
-    //     updateAllTilesHTML();
-    //     score_field.textContent = score;
-    // } else {
-    //     startGame();
-    //     saveGameState();
-    // }
+    // startGame();
+    if (loadGameState()) {
+        createTilesHTML();
+        updateAllTilesHTML();
+        score_field.textContent = score;
+    } else {
+        startGame();
+        saveGameState();
+    }
     updateLeaderboardHTML();
+}
+
+
+// ------------------- SWIPE -------------------
+
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+const SWIPE_THRESHOLD = 30;
+
+const board = document.getElementById("board");
+
+board.addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 1) return;
+
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+}, { passive: true });
+
+board.addEventListener("touchend", (e) => {
+    const t = e.changedTouches[0];
+    touchEndX = t.clientX;
+    touchEndY = t.clientY;
+
+    handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+    const dx = touchEndX - touchStartX;
+    const dy = touchEndY - touchStartY;
+
+    if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) {
+        return;
+    }
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) {
+            slide(rotationRules.Right);
+        } else {
+            slide(rotationRules.Left);
+        }
+    } else {
+        if (dy > 0) {
+            slide(rotationRules.Down);
+        } else {
+            slide(rotationRules.Up);
+        }
+    }
+
+    score_field.textContent = score;
 }
