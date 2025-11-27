@@ -26,6 +26,11 @@ button:disabled {
 button:hover:not(:disabled) {
     background-color: #9f8b77;
 }
+#game-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
 
 #board {
     width: 400px;
@@ -34,7 +39,9 @@ button:hover:not(:disabled) {
     margin: 0 auto;
     /* background-color: #cdc1b5; */
     background-color: #bbada0;
+    transform-origin: top center;
     position: relative;
+    touch-action: none;
 }
 
 .grid-cell {
@@ -56,7 +63,7 @@ button:hover:not(:disabled) {
     align-items: center;
     font-size: 40px;
     font-weight: bold;
-    border: 5px solid #bbada0;
+    /* border: 5px solid #bbada0; */
     box-sizing: border-box;
     z-index: 1;
 }
@@ -218,4 +225,49 @@ td {
 .mergeTile.show {
     transform: scale(1);
 }
+
+@media (max-width: 768px) {
+    #board {
+        transform: scale(0.85);
+    }
+
+    button {
+        font-size: 14px;
+        padding: 6px 10px;
+    }
+
+    hr {
+        width: 90%;
+    }
+}
+@media (max-width: 480px) {
+    #board {
+        transform: scale(0.7);
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    button {
+        width: 100%;
+        margin: 6px 0;
+        font-size: 16px;
+    }
+
+    table {
+        width: 95%;
+        font-size: 14px;
+    }
+
+    .modal-content {
+        width: 90%;
+    }
+}
+@media (max-width: 360px) {
+    #board {
+        transform: scale(0.6);
+    }
+}
+
 

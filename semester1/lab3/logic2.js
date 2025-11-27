@@ -18,9 +18,32 @@ let undoBtn, modal, messageEl, nameInput, saveBtn, restartBtn, tbody, score_fiel
 // ------------------- АНИМАЦИЯ -------------------
 
 
+// function createGrid() {
+//     const grid = document.querySelector("#board .grid");
+//     grid.innerHTML = "";
+
+//     for (let row = 0; row < size; row++) {
+//         for (let col = 0; col < size; col++) {
+//             const cell = document.createElement("div");
+//             cell.classList.add("grid-cell");
+
+//             const coords = getTileCoord(row, col);
+//             cell.style.left = coords.left + "px";
+//             cell.style.top  = coords.top  + "px";
+
+//             grid.appendChild(cell);
+//         }
+//     }
+// }
+
 function createGrid() {
     const grid = document.querySelector("#board .grid");
-    grid.innerHTML = "";
+    if (!grid) return;
+
+    // удаляем старые ячейки
+    while (grid.firstChild) {
+        grid.removeChild(grid.firstChild);
+    }
 
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
@@ -35,6 +58,7 @@ function createGrid() {
         }
     }
 }
+
 
 
 function getTileCoord(row, col) {
@@ -335,6 +359,7 @@ function updateTileHTML(tile, value) {
 
 
 function createTilesHTML() {
+    createGrid();
     document.getElementById("score").textContent = "0";
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
@@ -610,13 +635,28 @@ function mapRotatedCoords(row, col, numRot) {
 }
 
 
+// function restartGame() {
+//     board = document.getElementById("board")
+//     while (board.firstChild) {
+//         board.removeChild(board.firstChild);
+//     }
+//     startGame();
+// }
+
+
 function restartGame() {
-    board = document.getElementById("board")
-    while (board.firstChild) {
-        board.removeChild(board.firstChild);
-    }
+    const board = document.getElementById("board");
+
+    // удаляем только плитки и анимации, НЕ grid
+    Array.from(board.children).forEach(child => {
+        if (!child.classList.contains("grid")) {
+            board.removeChild(child);
+        }
+    });
+
     startGame();
 }
+
 
 
 function undoMove() {
@@ -701,7 +741,6 @@ function startGame() {
         [0, 0, 0, 0],
     ]
     undoBtn.disabled = true;
-    createGrid();
     createTilesHTML();
     spawnTiles(3, 0.1);
 }
@@ -755,14 +794,69 @@ window.onload = function() {
     nameInput.addEventListener("input", () => {
         saveBtn.disabled = nameInput.value.trim() === "";
     });
-    startGame();
-    // if (loadGameState()) {
-    //     createTilesHTML();
-    //     updateAllTilesHTML();
-    //     score_field.textContent = score;
-    // } else {
-    //     startGame();
-    //     saveGameState();
-    // }
+    // startGame();
+    if (loadGameState()) {
+        createTilesHTML();
+        updateAllTilesHTML();
+        score_field.textContent = score;
+    } else {
+        startGame();
+        saveGameState();
+    }
     updateLeaderboardHTML();
+}
+
+
+// ------------------- SWIPE -------------------
+
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+const SWIPE_THRESHOLD = 30; // минимальное расстояние
+
+const board = document.getElementById("board");
+
+board.addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 1) return;
+
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+}, { passive: true });
+
+board.addEventListener("touchend", (e) => {
+    const t = e.changedTouches[0];
+    touchEndX = t.clientX;
+    touchEndY = t.clientY;
+
+    handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+    const dx = touchEndX - touchStartX;
+    const dy = touchEndY - touchStartY;
+
+    if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) {
+        return; // слишком маленький свайп
+    }
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        // горизонталь
+        if (dx > 0) {
+            slide(rotationRules.Right);
+        } else {
+            slide(rotationRules.Left);
+        }
+    } else {
+        // вертикаль
+        if (dy > 0) {
+            slide(rotationRules.Down);
+        } else {
+            slide(rotationRules.Up);
+        }
+    }
+
+    score_field.textContent = score;
 }
