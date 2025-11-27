@@ -3,7 +3,7 @@ name: Deploy GitHub Pages
 on:
   push:
     branches:
-      - lab2
+      - lab3
 
 jobs:
   deploy:
@@ -16,7 +16,7 @@ jobs:
     - name: Copy files from subfolder
       run: |
         mkdir deploy
-        cp -r semester1/lab2/* deploy/  # site/
+        cp -r semester1/lab3/* deploy/  # site/
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3

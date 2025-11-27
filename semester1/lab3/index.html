@@ -12,9 +12,12 @@
         <button id="restartBtn">Начать заново</button>
     </div>
     <h2>Score: <span id="score">0</span></h2>
-    <div id="board">
-        <div class="grid"></div>
+    <div id="game-wrapper">
+        <div id="board">
+            <div class="grid"></div>
+        </div>
     </div>
+
     <h3>Лидерборд</h3>
     <table id="leaderboardTable">
         <thead>
@@ -32,9 +35,9 @@
             <p id="gameOverMessage">Игра окончена! Введите имя, чтобы сохранить результат:</p>
             <input id="playerNameInput" type="text" placeholder="Ваше имя">
             <button id="saveScoreBtn">Сохранить результат</button>
-            <button id="restartBtn2" class="restart">⟳ Начать заново</button>
+            <button id="restartBtn2">Начать заново</button>
         </div>
     </div>
-<script src="logic2.js"></script>
+<script src="logic.js"></script>
 </body>
 </html>
