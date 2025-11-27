@@ -1,307 +1,563 @@
-let addBtn, nameEntry, dateEntry, taskContainer, searchInput, sortSelect, filterSelect;
-let tasks = [];
-
-
-function createMainElements() {
-    // корневой контейнер
-    const container = document.createElement("div");
-    container.classList.add("container");
-
-    // div приложения
-    const app = document.createElement("div");
-    app.classList.add("to-do-app");
-
-    // верхняя панель
-    const header = document.createElement("div");
-    header.classList.add("header");
-
-    const title = document.createElement("h2");
-    title.textContent = "just to-do it!";
-
-    // панель поиска и сортировки
-    const controlPanel = document.createElement("div");
-    controlPanel.classList.add("controls");
-
-    // поиск
-    searchInput = document.createElement("input");
-    searchInput.type = "text";
-    searchInput.placeholder = "поиск по названию...";
-
-    // сортировка
-    sortSelect = document.createElement("select");
-
-    const sortOptions = [
-        { value: "custom", text: "пользовательская" },
-        { value: "id_desc", text: "сначала новые" },
-        { value: "id_asc", text: "сначала старые" },
-        { value: "deadline_asc", text: "сначала срочные ↑" },
-        { value: "deadline_desc", text: "сначала несрочные ↓" },
-    ];
-
-    sortOptions.forEach(opt => {
-        const option = document.createElement("option");
-        option.value = opt.value;
-        option.textContent = opt.text;
-        sortSelect.appendChild(option);
-    });
-
-    // фильтрация
-    filterSelect = document.createElement("select");
-
-    const filterOptions = [
-        { value: "all", text: "все" },
-        { value: "active", text: "невыполненные" },
-        { value: "done", text: "выполненные" },
-    ];
-
-    filterOptions.forEach(opt => {
-        const option = document.createElement("option");
-        option.value = opt.value;
-        option.textContent = opt.text;
-        filterSelect.appendChild(option);
-    });
-
-    controlPanel.append(searchInput, sortSelect, filterSelect);
-    header.append(title, controlPanel);
-
-    // форма добавления задачи
-    const row = document.createElement("div");
-    row.classList.add("row");
-
-    nameEntry = document.createElement("input");
-    nameEntry.type = "text";
-    nameEntry.placeholder = "напиши свою задачу...";
-
-    dateEntry = document.createElement("input");
-    dateEntry.type = "date";
-    dateEntry.value = new Date().toISOString().split("T")[0];
-
-    addBtn = document.createElement("button");
-    addBtn.textContent = "добавить";
-
-    row.append(nameEntry, dateEntry, addBtn);
-
-    // контейнер для задач
-    taskContainer = document.createElement("ul");
-    taskContainer.classList.add("task-container");
-
-    // сборка
-    app.append(header, row, taskContainer);
-    container.append(app);
-    document.body.appendChild(container);
-
-    // события
-    addBtn.onclick = addTask;
-    searchInput.addEventListener("input", updateToDoListHTML);
-    sortSelect.addEventListener("change", updateToDoListHTML);
-    filterSelect.addEventListener("change", updateToDoListHTML);
+let matrix;
+let prev_matrix;
+let leaderboard;
+let score = 0;
+let prev_score;
+const size = 4;
+const ANIMATION_DURATION = 250;
+const rotationRules = {
+  "Left": 0,
+  "Up": 1,
+  "Right": 2,
+  "Down": 3
 }
+const rotate90cw = m => m[0].map((_, i) => m.map(row => row[i]).reverse());
+const rotate90ccw = m => m[0].map((_, i) => m.map(row => row[i])).reverse();
+let undoBtn, modal, messageEl, nameInput, saveBtn, restartBtn, tbody, score_field;
 
 
-createMainElements();
+// ------------------- АНИМАЦИЯ -------------------
 
 
-function searchFilter(ts) {
-    const query = searchInput.value.trim().toLowerCase();
-    if (query === "") return ts;
-    return ts.filter(t => t.title.toLowerCase().includes(query));
-}
-
-function statusFilter(ts) {
-    switch (filterSelect.value) {
-        case "active":
-            return ts.filter(t => t.active);
-        case "done":
-            return ts.filter(t => !t.active);
-        default:
-            return ts;
+function createGrid() {
+    const grid = document.querySelector("#board .grid");
+    if (!grid) return;
+    while (grid.firstChild) {
+        grid.removeChild(grid.firstChild);
     }
-}
-
-function sortTasks(ts) {
-    switch (sortSelect.value) {
-        case "custom":
-            return ts;
-        case "id_asc":
-            return ts.sort((a, b) => a.id - b.id);
-        case "id_desc":
-            return ts.sort((a, b) => b.id - a.id);
-        case "deadline_asc":
-            return ts.sort((a, b) => (a.date || "") > (b.date || "") ? 1 : -1);
-        case "deadline_desc":
-            return ts.sort((a, b) => (a.date || "") < (b.date || "") ? 1 : -1);
-        default:
-            return ts;
-    }
-}
-
-
-function updateToDoListHTML() {
-    // очистка списка
-    while (taskContainer.firstChild) {
-        taskContainer.removeChild(taskContainer.firstChild);
-    }
-    let tasks_to_show = sortTasks(statusFilter(searchFilter(tasks)));
-    const todayStr = new Date().toISOString().split("T")[0];
-    
-    // добавление задач
-    tasks_to_show.forEach(task => {
-        let taskHTML = document.createElement("li");
-        taskHTML.draggable = true;
-        taskHTML.dataset.id = task.id;
-        taskHTML.classList.toggle("done", !task.active);
-
-        // кружочек слева
-        const circle = document.createElement("span");
-        circle.classList.add("circle");
-
-        circle.addEventListener("click", e => {
-            e.stopPropagation();
-            const t = tasks.find(t => t.id == task.id);
-            if (t) {
-                t.active = !t.active;
-                saveData();
-                updateToDoListHTML();
-            }
-        });
-
-        // текст задачи
-        const titleInput = document.createElement("input");
-        titleInput.type = "text";
-        titleInput.value = task.title;
-        titleInput.classList.add("task-title");
-
-        // изменение названия задачи
-        titleInput.addEventListener("input", e => {
-            const t = tasks.find(t => t.id == task.id);
-            if (t) t.title = e.target.value;
-            saveData();
-        });
-
-        // выбор даты
-        const dateInput = document.createElement("input");
-        dateInput.type = "date";
-        dateInput.value = task.date || new Date().toISOString().split("T")[0];
-
-        dateInput.addEventListener("change", e => {
-            const t = tasks.find(t => t.id == task.id);
-            if (t) t.date = e.target.value;
-            saveData();
-        });
-
-        // проверка дедлайна
-        taskHTML.classList.remove("overdue", "today");
-        if (!task.active) {
-        } else if (task.date < todayStr) {
-            taskHTML.classList.add("overdue");
-        } else if (task.date === todayStr) {
-            taskHTML.classList.add("today");
+    for (let row = 0; row < size; row++) {
+        for (let col = 0; col < size; col++) {
+            const cell = document.createElement("div");
+            cell.classList.add("grid-cell");
+            const coords = getTileCoord(row, col);
+            cell.style.left = coords.left + "px";
+            cell.style.top  = coords.top  + "px";
+            grid.appendChild(cell);
         }
+    }
+}
 
-        // кнопка удаления
-        const closeBtn = document.createElement("span");
-        closeBtn.textContent = "\u00d7";
-        closeBtn.classList.add("close-btn");
-        closeBtn.addEventListener("click", e => {
-            e.stopPropagation();
-            deleteTask(task.id);
+
+function getTileCoord(row, col) {
+    const tileSize = 90;
+    const gap = 10;
+    const offset = gap / 2;
+    return {
+        left: offset + col * (tileSize + gap),
+        top:  offset + row * (tileSize + gap)
+    };
+}
+
+
+function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=false) {
+    const board = document.getElementById("board");
+    const anim = document.createElement("div");
+    anim.textContent = value;
+    anim.dataset.value = value;
+
+    anim.classList.add(isNew ? "newTile" : merged ? "mergeTile" : "moveTile");
+
+    let class_value = (value >= 8192) ? "8192" : value.toString();
+    anim.classList.add("tile" + class_value);
+
+    const fromId = fromRow.toString() + fromCol.toString();
+    const toId   = toRow.toString() + toCol.toString();
+    const realFrom = document.getElementById(fromId);
+    const realTo   = document.getElementById(toId);
+
+    if (realFrom) {
+        const cs = getComputedStyle(realFrom);
+        anim.style.backgroundColor = cs.backgroundColor;
+        anim.style.color = cs.color;
+    } else if (realTo) {
+        const cs = getComputedStyle(realTo);
+        anim.style.backgroundColor = cs.backgroundColor;
+        anim.style.color = cs.color;
+    }
+    board.appendChild(anim);
+    const fromCoord = getTileCoord(fromRow, fromCol);
+    const toCoord   = getTileCoord(toRow, toCol);
+    anim.style.left = fromCoord.left + "px";
+    anim.style.top  = fromCoord.top + "px";
+
+    if (realFrom) realFrom.style.visibility = 'hidden';
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            anim.style.left = toCoord.left + "px";
+            anim.style.top  = toCoord.top  + "px";
+            if (isNew || merged) anim.classList.add("show");
         });
-
-        // сборка
-        taskHTML.append(circle, titleInput, dateInput, closeBtn);
-        taskContainer.appendChild(taskHTML);
-
-        // обработчики для drag and drop
-        taskHTML.addEventListener("dragstart", handleDragStart);
-        taskHTML.addEventListener("dragover", handleDragOver);
-        taskHTML.addEventListener("drop", handleDrop);
-        taskHTML.addEventListener("dragend", handleDragEnd);
     });
-    saveData();
+
+    setTimeout(() => {
+        anim.remove();
+        if (realTo) {
+            updateTileHTML(realTo, value);
+        }
+        if (realFrom) {
+            const fromVal = matrix?.[fromRow]?.[fromCol] ?? 0;
+            updateTileHTML(realFrom, fromVal);
+            if (fromVal === 0) realFrom.style.visibility = 'hidden';
+        }
+    }, ANIMATION_DURATION);
 }
 
 
-let draggedElement = null;
+function animateNewTile(row, col, value) {
+    const board = document.getElementById("board");
+    const tile = document.getElementById(row.toString() + col.toString());
+    if (tile) tile.style.visibility = 'hidden';
 
-function handleDragStart(e) {
-    draggedElement = this;
-    this.classList.add("dragging");
-    e.dataTransfer.effectAllowed = "move";
-}
+    const anim = document.createElement("div");
+    anim.textContent = value;
+    anim.dataset.value = value;
+    anim.classList.add("tile", "newTile");
+    const class_value = (value >= 8192) ? "8192" : value.toString();
+    anim.classList.add("tile" + class_value);
 
-function handleDragOver(e) {
-    e.preventDefault();
-    const dragging = taskContainer.querySelector(".dragging");
-    const siblings = [...taskContainer.querySelectorAll("li:not(.dragging)")];
-    const nextSibling = siblings.find(sibling => {
-        return e.clientY <= sibling.offsetTop + sibling.offsetHeight / 2;
+    const coords = getTileCoord(row, col);
+    anim.style.position = "absolute";
+    anim.style.left = coords.left + "px";
+    anim.style.top = coords.top + "px";
+    anim.style.transform = "scale(0)";
+    anim.style.transition = "transform 200ms ease-out";
+
+    board.appendChild(anim);
+
+    requestAnimationFrame(() => {
+        anim.style.transform = "scale(1)";
     });
-    taskContainer.insertBefore(dragging, nextSibling || null);
-}
 
-function handleDrop(e) {
-    e.stopPropagation();
-    this.classList.remove("over");
-}
-
-function handleDragEnd() {
-    this.classList.remove("dragging");
-    // обновление порядка задач в массиве
-    const newOrder = Array.from(taskContainer.children).map(li => parseInt(li.dataset.id));
-    console.log(newOrder);
-    tasks = newOrder.map(id => tasks.find(t => t.id === id));
-    saveData();
-    sortSelect.value = "custom";
+    setTimeout(() => {
+        anim.remove();
+        if (tile) {
+            updateTileHTML(tile, value);
+            tile.style.visibility = 'visible';
+        }
+    }, ANIMATION_DURATION);
 }
 
 
-function addTask() {
-    if(nameEntry.value === '') {
-        alert("чтобы добавить задачу, надо написать ее");
+// ------------------- HTML -------------------
+
+
+function updateTileHTML(tile, value) {
+    if (!tile) return;
+    if (value === 0) {
+        tile.style.visibility = 'hidden';
+        tile.className = 'tile';
+        tile.textContent = '';
         return;
     }
-    let deadline = dateEntry.value || null;
-    if(!tasks.length){ // список пуст
-        tasks = [{
-            id: 1,
-            active: true,
-            date: deadline,
-            title: nameEntry.value
-        }]
-    }else { // добавить в уже непустой список наерх
-        tasks.unshift({
-            id: tasks.length + 1,
-            active: true,
-            date: deadline,
-            title: nameEntry.value
-        }); 
-    } 
-    updateToDoListHTML();
-    nameEntry.value = '';
-    dateEntry.value = new Date().toISOString().split("T")[0];;
+
+    tile.style.visibility = 'visible';
+    tile.classList.value = "";
+    tile.classList.add("tile");
+    let class_value = (value >= 8192) ? "8192" : value.toString();
+    tile.classList.add("tile" + class_value);
+    tile.textContent = value.toString();
 }
 
 
-function deleteTask(task_id) {
-    indexTask = tasks.findIndex(value => value.id == task_id);
-    tasks.splice(indexTask, 1);
-    updateToDoListHTML(); 
-}
-
-
-function saveData() {
-    localStorage.setItem('todo-list', JSON.stringify(tasks));
-}
-
-
-function loadToDoList(){
-    if(localStorage.getItem('todo-list')){
-        tasks = JSON.parse(localStorage.getItem('todo-list'))
-        // tasks = [];
-        updateToDoListHTML();
-    } else {
-        tasks = [];
+function createTilesHTML() {
+    createGrid();
+    document.getElementById("score").textContent = "0";
+    for (let row = 0; row < size; row++) {
+        for (let col = 0; col < size; col++) {
+            let tile = document.createElement("div");
+            tile.setAttribute("id", row.toString() + col.toString());
+            tile.classList.add("tile");
+            tile.style.position = "absolute";
+            const coords = getTileCoord(row, col);
+            tile.style.left = coords.left + "px";
+            tile.style.top = coords.top + "px";
+            tile.style.visibility = 'hidden';
+            document.getElementById("board").append(tile);
+        }
     }
 }
 
-loadToDoList();
+
+function updateAllTilesHTML() {
+    for (let row = 0; row < size; row++) {
+        for (let col = 0; col < size; col ++) {
+            tile = document.getElementById(row.toString() + col.toString());
+            updateTileHTML(tile, matrix[row][col]);
+        }
+    }
+}
+
+
+function updateLeaderboardHTML() {
+    while (tbody.firstChild) {
+        tbody.removeChild(tbody.firstChild);
+    }
+    leaderboard.forEach(entry => {
+        let tr = document.createElement("tr");
+        let nameTd = document.createElement("td");
+        nameTd.textContent = entry.name;
+        let scoreTd = document.createElement("td");
+        scoreTd.textContent = entry.score;
+        let dateTd = document.createElement("td");
+        dateTd.textContent = entry.date;
+        tr.appendChild(nameTd);
+        tr.appendChild(scoreTd);
+        tr.appendChild(dateTd);
+        tbody.appendChild(tr);
+    });
+}
+
+
+// ------------------- МЕХАНИКА -------------------
+
+
+function getEmptyCells() {
+    let emptyCells = [];
+    for (let row = 0; row < size; row++) {
+        for (let col = 0; col < size; col++) {
+            if (matrix[row][col] === 0) emptyCells.push([row, col]);
+        }
+    }
+    return emptyCells;
+}
+
+
+function spawnTiles(maxCount = 1, chanceForFour = 0.1) {
+    let emptyCells = getEmptyCells();
+    let count = 1;
+    if (maxCount == 2 && Math.random() < 0.2) count = 2;
+    if (maxCount == 3 && Math.random() < 0.05) count = 3;
+    count = Math.min(count, emptyCells.length);
+
+    for (let i = 0; i < count && emptyCells.length > 0; i++) {
+        let idx = Math.floor(Math.random() * emptyCells.length);
+        let [row, col] = emptyCells.splice(idx, 1)[0];
+        let value = Math.random() < chanceForFour ? 4 : 2;
+        matrix[row][col] = value;
+
+        const realTile = document.getElementById(row.toString() + col.toString());
+        if (realTile) realTile.style.visibility = 'hidden';
+
+        const anim = document.createElement("div");
+        anim.textContent = value;
+        anim.dataset.value = value;
+        anim.classList.add("tile", "newTile");
+        const class_value = (value >= 8192) ? "8192" : value.toString();
+        anim.classList.add("tile" + class_value);
+
+        const coords = getTileCoord(row, col);
+        anim.style.position = "absolute";
+        anim.style.left = coords.left + "px";
+        anim.style.top = coords.top + "px";
+        anim.style.transform = "scale(0)";
+        anim.style.transition = "transform 200ms ease-out";
+
+        document.getElementById("board").appendChild(anim);
+
+        requestAnimationFrame(() => {
+            anim.style.transform = "scale(1)";
+        });
+
+        setTimeout(() => {
+            anim.remove();
+            if (realTile) {
+                updateTileHTML(realTile, value);
+                realTile.style.visibility = 'visible';
+            }
+        }, ANIMATION_DURATION);
+    }
+
+    saveGameState();
+}
+
+
+function slideRow(row) {
+    row = row.filter(num => num != 0);
+    for (let i = 0; i < row.length - 1; i++) {
+        if ((row[i] === row[i + 1]) && row[i] != 0) {
+            row[i] *= 2;
+            row[i + 1] = 0;
+            score += row[i];
+        }
+    }
+    row = row.filter(num => num != 0);
+    while (row.length != size) {
+        row.push(0);
+    } 
+    return row;
+}
+
+
+function slide(numRot) {
+    prev_matrix = matrix.map(r => [...r]);
+    prev_score = score;
+
+    for (let i = 0; i < numRot; i++) matrix = rotate90ccw(matrix);
+
+    for (let row = 0; row < size; row++) {
+        let actions = [];
+        let merged = new Array(size).fill(false);
+        let newRow = [];
+
+        for (let col = 0; col < size; col++) {
+            if (matrix[row][col] === 0) continue;
+
+            let last = newRow.length - 1;
+            if (last >= 0 && newRow[last] === matrix[row][col] && !merged[last]) {
+                newRow[last] *= 2;
+                score += newRow[last];
+                merged[last] = true;
+                actions.push({ fromCol: col, toCol: last, val: newRow[last], merged: true });
+            } else {
+                newRow.push(matrix[row][col]);
+                actions.push({ fromCol: col, toCol: newRow.length - 1, val: matrix[row][col], merged: false });
+            }
+        }
+
+        while (newRow.length < size) newRow.push(0);
+        matrix[row] = newRow;
+
+        actions.forEach(act => {
+            if (act.fromCol !== act.toCol || act.merged) {
+                let [fromRowMapped, fromColMapped] = mapRotatedCoords(row, act.fromCol, numRot);
+                let [toRowMapped, toColMapped] = mapRotatedCoords(row, act.toCol, numRot);
+                animateTile(fromRowMapped, fromColMapped, toRowMapped, toColMapped, act.val, act.merged);
+            }
+        });
+    }
+
+    for (let i = 0; i < numRot; i++) matrix = rotate90cw(matrix);
+
+    setTimeout(() => {
+        updateAllTilesHTML();
+        undoBtn.disabled = false;
+        saveGameState();
+        if (JSON.stringify(prev_matrix) !== JSON.stringify(matrix)) {
+            spawnTiles(2, 0.1); // <- теперь новые плитки появляются после анимации
+        }
+        if (checkGameOver()) showGameOverWindow();
+    }, ANIMATION_DURATION);
+}
+
+
+function mapRotatedCoords(row, col, numRot) {
+    let r = row, c = col;
+    for (let i = 0; i < numRot; i++) {
+        [r, c] = [c, size - 1 - r];
+    }
+    return [r, c];
+}
+
+
+function restartGame() {
+    const board = document.getElementById("board");
+    Array.from(board.children).forEach(child => {
+        if (!child.classList.contains("grid")) {
+            board.removeChild(child);
+        }
+    });
+
+    startGame();
+}
+
+
+
+function undoMove() {
+    matrix = prev_matrix;
+    score = prev_score;
+    updateAllTilesHTML();
+    saveGameState(); 
+    undoBtn.disabled = true;
+    score_field.textContent = score;
+}
+
+
+function checkGameOver() {
+    if (getEmptyCells().length > 0) return false;
+    for (let row = 0; row < size; row++) {
+        for (let col = 0; col < size; col++) {
+            if (col < size - 1 && matrix[row][col] === matrix[row][col + 1]) {
+                return false;
+            }
+            if (row < size - 1 && matrix[row][col] === matrix[row + 1][col]) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
+function saveGameResult() {
+    let name = nameInput.value.trim();
+    if (name === "") return;
+
+    let date = new Date().toLocaleDateString("ru-RU");
+
+    leaderboard.push({
+        name: name,
+        score: score,
+        date: date
+    });
+
+    leaderboard.sort((a, b) => b.score - a.score);
+    leaderboard = leaderboard.slice(0, 10);
+    messageEl.textContent = "Ваш рекорд сохранён!";
+    nameInput.classList.add("hidden");
+    saveBtn.classList.add("hidden");
+    updateLeaderboardHTML();
+}
+
+
+function saveGameState() {
+    const state = {
+        matrix,
+        prev_matrix,
+        score,
+        prev_score,
+        leaderboard
+    };
+    localStorage.setItem("gameState", JSON.stringify(state));
+}
+
+
+function loadGameState() {
+    const raw = localStorage.getItem("gameState");
+    if (!raw) return false;
+
+    let state = JSON.parse(raw);
+    matrix = state.matrix;
+    prev_matrix = state.prev_matrix;
+    score = state.score;
+    prev_score = state.prev_score;
+    leaderboard = state.leaderboard || [];
+    return true;
+}
+
+
+function startGame() {
+    score = 0;
+    matrix = [
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+    ]
+    undoBtn.disabled = true;
+    createTilesHTML();
+    spawnTiles(3, 0.1);
+}
+
+
+document.addEventListener('keydown', (e) => {
+    if (e.code.startsWith("Arrow")) {
+        e.preventDefault()
+        slide(rotationRules[e.code.slice(5)]);
+    }
+    score_field.textContent = score;
+})
+
+
+function showGameOverWindow() {
+    messageEl.textContent = "Игра окончена! Введите имя, чтобы сохранить результат:";
+    nameInput.classList.remove("hidden");
+    saveBtn.disabled = nameInput.value.trim() === "";
+    saveBtn.classList.remove("hidden");
+    modal.classList.remove("hidden");
+}
+
+
+function hideGameOverWindow() {
+    modal.classList.add("hidden");
+}
+
+
+// ------------------- ЗАГРУЗКА -------------------
+
+
+window.onload = function() {
+    undoBtn = document.getElementById("undoBtn")
+    undoBtn.addEventListener("click", undoMove);
+    document.getElementById("restartBtn").addEventListener("click", restartGame);
+    document.getElementById("restartBtn2").addEventListener("click", () => {
+        hideGameOverWindow();
+        restartGame();
+    });
+
+    modal = document.getElementById("gameOverModal");
+    messageEl = document.getElementById("gameOverMessage");
+    nameInput = document.getElementById("playerNameInput");
+    saveBtn = document.getElementById("saveScoreBtn");
+    saveBtn.addEventListener("click", saveGameResult);
+    tbody = document.getElementById("leaderboardBody");
+    score_field = document.getElementById("score")
+
+    saveBtn.disabled = true;
+    nameInput.addEventListener("input", () => {
+        saveBtn.disabled = nameInput.value.trim() === "";
+    });
+    // startGame();
+    if (loadGameState()) {
+        createTilesHTML();
+        updateAllTilesHTML();
+        score_field.textContent = score;
+    } else {
+        startGame();
+        saveGameState();
+    }
+    updateLeaderboardHTML();
+}
+
+
+// ------------------- SWIPE -------------------
+
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+const SWIPE_THRESHOLD = 30;
+
+const board = document.getElementById("board");
+
+board.addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 1) return;
+
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+}, { passive: true });
+
+board.addEventListener("touchend", (e) => {
+    const t = e.changedTouches[0];
+    touchEndX = t.clientX;
+    touchEndY = t.clientY;
+
+    handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+    const dx = touchEndX - touchStartX;
+    const dy = touchEndY - touchStartY;
+
+    if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) {
+        return;
+    }
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) {
+            slide(rotationRules.Right);
+        } else {
+            slide(rotationRules.Left);
+        }
+    } else {
+        if (dy > 0) {
+            slide(rotationRules.Down);
+        } else {
+            slide(rotationRules.Up);
+        }
+    }
+
+    score_field.textContent = score;
+}
