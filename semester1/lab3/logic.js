@@ -3,33 +3,40 @@ let prev_matrix;
 let leaderboard;
 let score = 0;
 let prev_score;
-const size = 4;
-const ANIMATION_DURATION = 250;
-const rotationRules = {
+let size = 4;
+let ANIMATION_DURATION = 250;
+let rotationRules = {
   "Left": 0,
   "Up": 1,
   "Right": 2,
   "Down": 3
 }
-const rotate90cw = m => m[0].map((_, i) => m.map(row => row[i]).reverse());
-const rotate90ccw = m => m[0].map((_, i) => m.map(row => row[i])).reverse();
+let rotate90cw = m => m[0].map((_, i) => m.map(row => row[i]).reverse());
+let rotate90ccw = m => m[0].map((_, i) => m.map(row => row[i])).reverse();
 let undoBtn, modal, messageEl, nameInput, saveBtn, restartBtn, tbody, score_field;
+
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+let SWIPE_THRESHOLD = 30;
+let board = document.getElementById("board");
 
 
 // ------------------- АНИМАЦИЯ -------------------
 
 
 function createGrid() {
-    const grid = document.querySelector("#board .grid");
+    let grid = document.querySelector("#board .grid");
     if (!grid) return;
     while (grid.firstChild) {
         grid.removeChild(grid.firstChild);
     }
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
-            const cell = document.createElement("div");
+            let cell = document.createElement("div");
             cell.classList.add("grid-cell");
-            const coords = getTileCoord(row, col);
+            let coords = getTileCoord(row, col);
             cell.style.left = coords.left + "px";
             cell.style.top  = coords.top  + "px";
             grid.appendChild(cell);
@@ -39,9 +46,9 @@ function createGrid() {
 
 
 function getTileCoord(row, col) {
-    const tileSize = 90;
-    const gap = 10;
-    const offset = gap / 2;
+    let tileSize = 90;
+    let gap = 10;
+    let offset = gap / 2;
     return {
         left: offset + col * (tileSize + gap),
         top:  offset + row * (tileSize + gap)
@@ -50,8 +57,8 @@ function getTileCoord(row, col) {
 
 
 function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=false) {
-    const board = document.getElementById("board");
-    const anim = document.createElement("div");
+    let board = document.getElementById("board");
+    let anim = document.createElement("div");
     anim.textContent = value;
     anim.dataset.value = value;
 
@@ -60,23 +67,23 @@ function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=
     let class_value = (value >= 8192) ? "8192" : value.toString();
     anim.classList.add("tile" + class_value);
 
-    const fromId = fromRow.toString() + fromCol.toString();
-    const toId   = toRow.toString() + toCol.toString();
-    const realFrom = document.getElementById(fromId);
-    const realTo   = document.getElementById(toId);
+    let fromId = fromRow.toString() + fromCol.toString();
+    let toId   = toRow.toString() + toCol.toString();
+    let realFrom = document.getElementById(fromId);
+    let realTo   = document.getElementById(toId);
 
     if (realFrom) {
-        const cs = getComputedStyle(realFrom);
+        let cs = getComputedStyle(realFrom);
         anim.style.backgroundColor = cs.backgroundColor;
         anim.style.color = cs.color;
     } else if (realTo) {
-        const cs = getComputedStyle(realTo);
+        let cs = getComputedStyle(realTo);
         anim.style.backgroundColor = cs.backgroundColor;
         anim.style.color = cs.color;
     }
     board.appendChild(anim);
-    const fromCoord = getTileCoord(fromRow, fromCol);
-    const toCoord   = getTileCoord(toRow, toCol);
+    let fromCoord = getTileCoord(fromRow, fromCol);
+    let toCoord   = getTileCoord(toRow, toCol);
     anim.style.left = fromCoord.left + "px";
     anim.style.top  = fromCoord.top + "px";
 
@@ -96,7 +103,7 @@ function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=
             updateTileHTML(realTo, value);
         }
         if (realFrom) {
-            const fromVal = matrix?.[fromRow]?.[fromCol] ?? 0;
+            let fromVal = matrix?.[fromRow]?.[fromCol] ?? 0;
             updateTileHTML(realFrom, fromVal);
             if (fromVal === 0) realFrom.style.visibility = 'hidden';
         }
@@ -105,18 +112,18 @@ function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=
 
 
 function animateNewTile(row, col, value) {
-    const board = document.getElementById("board");
-    const tile = document.getElementById(row.toString() + col.toString());
+    let board = document.getElementById("board");
+    let tile = document.getElementById(row.toString() + col.toString());
     if (tile) tile.style.visibility = 'hidden';
 
-    const anim = document.createElement("div");
+    let anim = document.createElement("div");
     anim.textContent = value;
     anim.dataset.value = value;
     anim.classList.add("tile", "newTile");
-    const class_value = (value >= 8192) ? "8192" : value.toString();
+    let class_value = (value >= 8192) ? "8192" : value.toString();
     anim.classList.add("tile" + class_value);
 
-    const coords = getTileCoord(row, col);
+    let coords = getTileCoord(row, col);
     anim.style.position = "absolute";
     anim.style.left = coords.left + "px";
     anim.style.top = coords.top + "px";
@@ -137,6 +144,51 @@ function animateNewTile(row, col, value) {
         }
     }, ANIMATION_DURATION);
 }
+
+
+// ------------------- СВАЙПЫ -------------------
+
+board.addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 1) return;
+
+    let t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+}, { passive: true });
+
+board.addEventListener("touchend", (e) => {
+    let t = e.changedTouches[0];
+    touchEndX = t.clientX;
+    touchEndY = t.clientY;
+
+    handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+    let dx = touchEndX - touchStartX;
+    let dy = touchEndY - touchStartY;
+
+    if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) {
+        return;
+    }
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) {
+            slide(rotationRules.Right);
+        } else {
+            slide(rotationRules.Left);
+        }
+    } else {
+        if (dy > 0) {
+            slide(rotationRules.Down);
+        } else {
+            slide(rotationRules.Up);
+        }
+    }
+
+    score_field.textContent = score;
+}
+
 
 
 // ------------------- HTML -------------------
@@ -169,7 +221,7 @@ function createTilesHTML() {
             tile.setAttribute("id", row.toString() + col.toString());
             tile.classList.add("tile");
             tile.style.position = "absolute";
-            const coords = getTileCoord(row, col);
+            let coords = getTileCoord(row, col);
             tile.style.left = coords.left + "px";
             tile.style.top = coords.top + "px";
             tile.style.visibility = 'hidden';
@@ -236,17 +288,17 @@ function spawnTiles(maxCount = 1, chanceForFour = 0.1) {
         let value = Math.random() < chanceForFour ? 4 : 2;
         matrix[row][col] = value;
 
-        const realTile = document.getElementById(row.toString() + col.toString());
+        let realTile = document.getElementById(row.toString() + col.toString());
         if (realTile) realTile.style.visibility = 'hidden';
 
-        const anim = document.createElement("div");
+        let anim = document.createElement("div");
         anim.textContent = value;
         anim.dataset.value = value;
         anim.classList.add("tile", "newTile");
-        const class_value = (value >= 8192) ? "8192" : value.toString();
+        let class_value = (value >= 8192) ? "8192" : value.toString();
         anim.classList.add("tile" + class_value);
 
-        const coords = getTileCoord(row, col);
+        let coords = getTileCoord(row, col);
         anim.style.position = "absolute";
         anim.style.left = coords.left + "px";
         anim.style.top = coords.top + "px";
@@ -351,7 +403,7 @@ function mapRotatedCoords(row, col, numRot) {
 
 
 function restartGame() {
-    const board = document.getElementById("board");
+    let board = document.getElementById("board");
     Array.from(board.children).forEach(child => {
         if (!child.classList.contains("grid")) {
             board.removeChild(child);
@@ -411,7 +463,7 @@ function saveGameResult() {
 
 
 function saveGameState() {
-    const state = {
+    let state = {
         matrix,
         prev_matrix,
         score,
@@ -423,7 +475,7 @@ function saveGameState() {
 
 
 function loadGameState() {
-    const raw = localStorage.getItem("gameState");
+    let raw = localStorage.getItem("gameState");
     if (!raw) return false;
 
     let state = JSON.parse(raw);
@@ -507,57 +559,4 @@ window.onload = function() {
         saveGameState();
     }
     updateLeaderboardHTML();
-}
-
-
-// ------------------- SWIPE -------------------
-
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
-
-const SWIPE_THRESHOLD = 30;
-
-const board = document.getElementById("board");
-
-board.addEventListener("touchstart", (e) => {
-    if (e.touches.length !== 1) return;
-
-    const t = e.touches[0];
-    touchStartX = t.clientX;
-    touchStartY = t.clientY;
-}, { passive: true });
-
-board.addEventListener("touchend", (e) => {
-    const t = e.changedTouches[0];
-    touchEndX = t.clientX;
-    touchEndY = t.clientY;
-
-    handleSwipe();
-}, { passive: true });
-
-function handleSwipe() {
-    const dx = touchEndX - touchStartX;
-    const dy = touchEndY - touchStartY;
-
-    if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) {
-        return;
-    }
-
-    if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > 0) {
-            slide(rotationRules.Right);
-        } else {
-            slide(rotationRules.Left);
-        }
-    } else {
-        if (dy > 0) {
-            slide(rotationRules.Down);
-        } else {
-            slide(rotationRules.Up);
-        }
-    }
-
-    score_field.textContent = score;
 }
