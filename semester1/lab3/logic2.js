@@ -19,23 +19,19 @@ let undoBtn, modal, messageEl, nameInput, saveBtn, restartBtn, tbody, score_fiel
 
 
 function createGrid() {
-    const board = document.getElementById("board");
-    const tileSize = 90;
-    const gap = 10;
+    const grid = document.querySelector("#board .grid");
+    grid.innerHTML = "";
 
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
             const cell = document.createElement("div");
             cell.classList.add("grid-cell");
 
-            // позиционируем точно под плиткой
-            const left = col * (tileSize + gap);
-            const top = row * (tileSize + gap);
+            const coords = getTileCoord(row, col);
+            cell.style.left = coords.left + "px";
+            cell.style.top  = coords.top  + "px";
 
-            cell.style.left = left + "px";
-            cell.style.top = top + "px";
-
-            board.appendChild(cell);
+            grid.appendChild(cell);
         }
     }
 }
@@ -43,11 +39,12 @@ function createGrid() {
 
 function getTileCoord(row, col) {
     const tileSize = 90;
-    const gap = 10; // одинаков с grid-cell
+    const gap = 10;
+    const offset = gap / 2;
 
     return {
-        left: col * (tileSize + gap),
-        top:  row * (tileSize + gap)
+        left: offset + col * (tileSize + gap),
+        top:  offset + row * (tileSize + gap)
     };
 }
 
@@ -704,6 +701,7 @@ function startGame() {
         [0, 0, 0, 0],
     ]
     undoBtn.disabled = true;
+    createGrid();
     createTilesHTML();
     spawnTiles(3, 0.1);
 }
@@ -757,7 +755,6 @@ window.onload = function() {
     nameInput.addEventListener("input", () => {
         saveBtn.disabled = nameInput.value.trim() === "";
     });
-    // createGrid();
     startGame();
     // if (loadGameState()) {
     //     createTilesHTML();
