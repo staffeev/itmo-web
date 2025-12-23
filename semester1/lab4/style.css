@@ -13,21 +13,35 @@ body {
 }
 
 .app {
-    background: white;
-    padding: 20px;
     width: 100%;
-    max-width: 420px;
-    border-radius: 8px;
+    max-width: 900px;
+    height: 520px;
+    background: white;
+    display: flex;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 280px;
+    border-right: 1px solid #ddd;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
 }
 
 .search {
     position: relative;
+    margin-bottom: 10px;
 }
 
-input {
+.search.hidden {
+    display: none;
+}
+
+.search input {
     width: 100%;
     padding: 8px;
-    font-size: 16px;
 }
 
 .suggestions {
@@ -52,10 +66,31 @@ input {
 .cities {
     list-style: none;
     padding: 0;
-    margin-top: 20px;
+    margin: 10px 0;
+    flex-grow: 1;
+    overflow-y: auto;
 }
 
 .cities li {
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.cities li.active {
+    background: #e0e7ff;
+}
+
+button {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.content {
+    flex-grow: 1;
+    padding: 20px;
+}
+
+.details img {
+    width: 64px;
+    height: 64px;
 }
