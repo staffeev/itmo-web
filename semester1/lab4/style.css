@@ -1,0 +1,61 @@
+* {
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    margin: 0;
+    background: #eef2f7;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.app {
+    background: white;
+    padding: 20px;
+    width: 100%;
+    max-width: 420px;
+    border-radius: 8px;
+}
+
+.search {
+    position: relative;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    font-size: 16px;
+}
+
+.suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    z-index: 10;
+}
+
+.suggestions div {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.suggestions div:hover {
+    background: #f0f0f0;
+}
+
+.cities {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+}
+
+.cities li {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}

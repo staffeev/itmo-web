@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Погода</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+    <h1>Погода</h1>
+
+    <div class="search">
+        <input
+            type="text"
+            id="cityInput"
+            placeholder="Начните вводить город"
+            autocomplete="off"
+        />
+        <div id="suggestions" class="suggestions"></div>
+    </div>
+
+    <ul id="citiesList" class="cities"></ul>
+</div>
+
+<script type="module" src="logic.js"></script>
+</body>
+</html>
