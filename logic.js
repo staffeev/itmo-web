@@ -1,519 +1,405 @@
-let matrix;
-let prev_matrix;
-let leaderboard;
-let score = 0;
-let prev_score;
-let size = 4;
-let ANIMATION_DURATION = 250;
-let rotationRules = {
-  "Left": 0,
-  "Up": 1,
-  "Right": 2,
-  "Down": 3
-}
-let rotate90cw = m => m[0].map((_, i) => m.map(row => row[i]).reverse());
-let rotate90ccw = m => m[0].map((_, i) => m.map(row => row[i])).reverse();
-let undoBtn, modal, messageEl, nameInput, saveBtn, restartBtn, tbody, score_field;
+import { API_KEY } from "./config.js";
 
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
-let SWIPE_THRESHOLD = 30;
-let board = document.getElementById("board");
+let cityInput = document.getElementById("cityInput");
+let suggestions = document.getElementById("suggestions");
+let citiesList = document.getElementById("citiesList");
+let details = document.getElementById("details");
+let refreshBtn = document.getElementById("refreshBtn");
+let geoBtn = document.getElementById("geoBtn");
+let searchBlock = document.getElementById("searchBlock");
+
+let state = {
+    cities: [],
+    selectedId: null
+};
+
+refreshBtn.addEventListener("click", refreshCurrentCity);
+geoBtn.addEventListener("click", updateGeolocation);
 
 
-// ------------------- АНИМАЦИЯ -------------------
+init();
 
 
-function createGrid() {
-    let grid = document.querySelector("#board .grid");
-    if (!grid) return;
-    while (grid.firstChild) {
-        grid.removeChild(grid.firstChild);
-    }
-    for (let row = 0; row < size; row++) {
-        for (let col = 0; col < size; col++) {
-            let cell = document.createElement("div");
-            cell.classList.add("grid-cell");
-            let coords = getTileCoord(row, col);
-            cell.style.left = coords.left + "px";
-            cell.style.top  = coords.top  + "px";
-            grid.appendChild(cell);
-        }
-    }
-}
+// инициализация
 
-
-function getTileCoord(row, col) {
-    let tileSize = 90;
-    let gap = 10;
-    let offset = gap / 2;
-    return {
-        left: offset + col * (tileSize + gap),
-        top:  offset + row * (tileSize + gap)
-    };
-}
-
-
-function animateTile(fromRow, fromCol, toRow, toCol, value, merged=false, isNew=false) {
-    let board = document.getElementById("board");
-    let anim = document.createElement("div");
-    anim.textContent = value;
-    anim.dataset.value = value;
-
-    anim.classList.add(isNew ? "newTile" : merged ? "mergeTile" : "moveTile");
-
-    let class_value = (value >= 8192) ? "8192" : value.toString();
-    anim.classList.add("tile" + class_value);
-
-    let fromId = fromRow.toString() + fromCol.toString();
-    let toId   = toRow.toString() + toCol.toString();
-    let realFrom = document.getElementById(fromId);
-    let realTo   = document.getElementById(toId);
-
-    if (realFrom) {
-        let cs = getComputedStyle(realFrom);
-        anim.style.backgroundColor = cs.backgroundColor;
-        anim.style.color = cs.color;
-    } else if (realTo) {
-        let cs = getComputedStyle(realTo);
-        anim.style.backgroundColor = cs.backgroundColor;
-        anim.style.color = cs.color;
-    }
-    board.appendChild(anim);
-    let fromCoord = getTileCoord(fromRow, fromCol);
-    let toCoord   = getTileCoord(toRow, toCol);
-    anim.style.left = fromCoord.left + "px";
-    anim.style.top  = fromCoord.top + "px";
-
-    if (realFrom) realFrom.style.visibility = 'hidden';
-
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            anim.style.left = toCoord.left + "px";
-            anim.style.top  = toCoord.top  + "px";
-            if (isNew || merged) anim.classList.add("show");
-        });
-    });
-
-    setTimeout(() => {
-        anim.remove();
-        if (realTo) {
-            updateTileHTML(realTo, value);
-        }
-        if (realFrom) {
-            let fromVal = matrix?.[fromRow]?.[fromCol] ?? 0;
-            updateTileHTML(realFrom, fromVal);
-            if (fromVal === 0) realFrom.style.visibility = 'hidden';
-        }
-    }, ANIMATION_DURATION);
-}
-
-
-function animateNewTile(row, col, value) {
-    let board = document.getElementById("board");
-    let tile = document.getElementById(row.toString() + col.toString());
-    if (tile) tile.style.visibility = 'hidden';
-
-    let anim = document.createElement("div");
-    anim.textContent = value;
-    anim.dataset.value = value;
-    anim.classList.add("tile", "newTile");
-    let class_value = (value >= 8192) ? "8192" : value.toString();
-    anim.classList.add("tile" + class_value);
-
-    let coords = getTileCoord(row, col);
-    anim.style.position = "absolute";
-    anim.style.left = coords.left + "px";
-    anim.style.top = coords.top + "px";
-    anim.style.transform = "scale(0)";
-    anim.style.transition = "transform 250ms ease-out";
-
-    board.appendChild(anim);
-
-    requestAnimationFrame(() => {
-        anim.style.transform = "scale(1)";
-    });
-
-    setTimeout(() => {
-        anim.remove();
-        if (tile) {
-            updateTileHTML(tile, value);
-            tile.style.visibility = 'visible';
-        }
-    }, ANIMATION_DURATION);
-}
-
-
-// ------------------- СВАЙПЫ -------------------
-
-board.addEventListener("touchstart", (e) => {
-    if (e.touches.length !== 1) return;
-
-    let t = e.touches[0];
-    touchStartX = t.clientX;
-    touchStartY = t.clientY;
-}, { passive: true });
-
-board.addEventListener("touchend", (e) => {
-    let t = e.changedTouches[0];
-    touchEndX = t.clientX;
-    touchEndY = t.clientY;
-
-    handleSwipe();
-}, { passive: true });
-
-function handleSwipe() {
-    let dx = touchEndX - touchStartX;
-    let dy = touchEndY - touchStartY;
-
-    if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) {
+function init() {
+    let saved = loadState();
+    if (saved) {
+        state = saved;
+        searchBlock.classList.remove("hidden");
+        refreshAllCities();
+        renderCities();
+        renderDetails();
         return;
     }
 
-    if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > 0) {
-            slide(rotationRules.Right);
-        } else {
-            slide(rotationRules.Left);
+    navigator.geolocation.getCurrentPosition(
+        pos => addCurrentLocation(pos.coords.latitude, pos.coords.longitude),
+        () => {
+            searchBlock.classList.remove("hidden");
+            searchBlock.classList.add("hint");
+            cityInput.placeholder = "Добавьте город вручную";
         }
-    } else {
-        if (dy > 0) {
-            slide(rotationRules.Down);
-        } else {
-            slide(rotationRules.Up);
-        }
-    }
-
-    score_field.textContent = score;
+    );
 }
 
 
+// получение местоположения пользователя
 
-// ------------------- HTML -------------------
-
-
-function updateTileHTML(tile, value) {
-    if (!tile) return;
-    if (value === 0) {
-        tile.style.visibility = 'hidden';
-        tile.className = 'tile';
-        tile.textContent = '';
+async function addCurrentLocation(lat, lon) {
+    let existing = state.cities.find(c => c.id === "current");
+    if (existing) {
+        existing.lat = lat;
+        existing.lon = lon;
+        await loadCityWeather(existing);
+        saveState();
+        renderCities();
+        renderDetails();
         return;
     }
 
-    tile.style.visibility = 'visible';
-    tile.classList.value = "";
-    tile.classList.add("tile");
-    let class_value = (value >= 8192) ? "8192" : value.toString();
-    tile.classList.add("tile" + class_value);
-    tile.textContent = value.toString();
-}
-
-
-function createTilesHTML() {
-    createGrid();
-    document.getElementById("score").textContent = "0";
-    for (let row = 0; row < size; row++) {
-        for (let col = 0; col < size; col++) {
-            let tile = document.createElement("div");
-            tile.setAttribute("id", row.toString() + col.toString());
-            tile.classList.add("tile");
-            tile.style.position = "absolute";
-            let coords = getTileCoord(row, col);
-            tile.style.left = coords.left + "px";
-            tile.style.top = coords.top + "px";
-            tile.style.visibility = 'hidden';
-            document.getElementById("board").append(tile);
-        }
-    }
-}
-
-
-function updateAllTilesHTML() {
-    for (let row = 0; row < size; row++) {
-        for (let col = 0; col < size; col ++) {
-            tile = document.getElementById(row.toString() + col.toString());
-            updateTileHTML(tile, matrix[row][col]);
-        }
-    }
-}
-
-
-function updateLeaderboardHTML() {
-    while (tbody.firstChild) {
-        tbody.removeChild(tbody.firstChild);
-    }
-    leaderboard.forEach(entry => {
-        let tr = document.createElement("tr");
-        let nameTd = document.createElement("td");
-        nameTd.textContent = entry.name;
-        let scoreTd = document.createElement("td");
-        scoreTd.textContent = entry.score;
-        let dateTd = document.createElement("td");
-        dateTd.textContent = entry.date;
-        tr.appendChild(nameTd);
-        tr.appendChild(scoreTd);
-        tr.appendChild(dateTd);
-        tbody.appendChild(tr);
-    });
-}
-
-
-// ------------------- МЕХАНИКА -------------------
-
-
-function getEmptyCells() {
-    let emptyCells = [];
-    for (let row = 0; row < size; row++) {
-        for (let col = 0; col < size; col++) {
-            if (matrix[row][col] === 0) emptyCells.push([row, col]);
-        }
-    }
-    return emptyCells;
-}
-
-
-function spawnTiles(maxCount = 1, chanceForFour = 0.1) {
-    let emptyCells = getEmptyCells();
-    let count = 1;
-
-    if (maxCount === 2 && Math.random() < 0.2) count = 2;
-    if (maxCount === 3 && Math.random() < 0.05) count = 3;
-
-    count = Math.min(count, emptyCells.length);
-
-    for (let i = 0; i < count; i++) {
-        let idx = Math.floor(Math.random() * emptyCells.length);
-        let [row, col] = emptyCells.splice(idx, 1)[0];
-        let value = Math.random() < chanceForFour ? 4 : 2;
-
-        matrix[row][col] = value;
-        animateNewTile(row, col, value);
-    }
-
-    saveGameState();
-}
-
-
-
-function slide(numRot) {
-    prev_matrix = matrix.map(r => [...r]);
-    prev_score = score;
-
-    for (let i = 0; i < numRot; i++) matrix = rotate90ccw(matrix);
-
-    for (let row = 0; row < size; row++) {
-        let actions = [];
-        let merged = new Array(size).fill(false);
-        let newRow = [];
-
-        for (let col = 0; col < size; col++) {
-            if (matrix[row][col] === 0) continue;
-
-            let last = newRow.length - 1;
-            if (last >= 0 && newRow[last] === matrix[row][col] && !merged[last]) {
-                newRow[last] *= 2;
-                score += newRow[last];
-                merged[last] = true;
-                actions.push({ fromCol: col, toCol: last, val: newRow[last], merged: true });
-            } else {
-                newRow.push(matrix[row][col]);
-                actions.push({ fromCol: col, toCol: newRow.length - 1, val: matrix[row][col], merged: false });
-            }
-        }
-
-        while (newRow.length < size) newRow.push(0);
-        matrix[row] = newRow;
-
-        actions.forEach(act => {
-            if (act.fromCol !== act.toCol || act.merged) {
-                let [fromRowMapped, fromColMapped] = mapRotatedCoords(row, act.fromCol, numRot);
-                let [toRowMapped, toColMapped] = mapRotatedCoords(row, act.toCol, numRot);
-                animateTile(fromRowMapped, fromColMapped, toRowMapped, toColMapped, act.val, act.merged);
-            }
-        });
-    }
-
-    for (let i = 0; i < numRot; i++) matrix = rotate90cw(matrix);
-
-    setTimeout(() => {
-        updateAllTilesHTML();
-        undoBtn.disabled = false;
-        saveGameState();
-        if (JSON.stringify(prev_matrix) !== JSON.stringify(matrix)) {
-            spawnTiles(2, 0.1);
-        }
-        if (checkGameOver()) showGameOverWindow();
-    }, ANIMATION_DURATION);
-}
-
-
-function mapRotatedCoords(row, col, numRot) {
-    let r = row, c = col;
-    for (let i = 0; i < numRot; i++) {
-        [r, c] = [c, size - 1 - r];
-    }
-    return [r, c];
-}
-
-
-function restartGame() {
-    let board = document.getElementById("board");
-    Array.from(board.children).forEach(child => {
-        if (!child.classList.contains("grid")) {
-            board.removeChild(child);
-        }
-    });
-
-    startGame();
-}
-
-
-
-function undoMove() {
-    matrix = prev_matrix;
-    score = prev_score;
-    updateAllTilesHTML();
-    saveGameState(); 
-    undoBtn.disabled = true;
-    score_field.textContent = score;
-}
-
-
-function checkGameOver() {
-    if (getEmptyCells().length > 0) return false;
-    for (let row = 0; row < size; row++) {
-        for (let col = 0; col < size; col++) {
-            if (col < size - 1 && matrix[row][col] === matrix[row][col + 1]) {
-                return false;
-            }
-            if (row < size - 1 && matrix[row][col] === matrix[row + 1][col]) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-
-function saveGameResult() {
-    let name = nameInput.value.trim();
-    if (name === "") return;
-
-    let date = new Date().toLocaleDateString("ru-RU");
-
-    leaderboard.push({
-        name: name,
-        score: score,
-        date: date
-    });
-
-    leaderboard.sort((a, b) => b.score - a.score);
-    leaderboard = leaderboard.slice(0, 10);
-    messageEl.textContent = "Ваш рекорд сохранён!";
-    nameInput.classList.add("hidden");
-    saveBtn.classList.add("hidden");
-    updateLeaderboardHTML();
-}
-
-
-function saveGameState() {
-    let state = {
-        matrix,
-        prev_matrix,
-        score,
-        prev_score,
-        leaderboard
+    let city = {
+        id: "current",
+        name: "Текущее местоположение",
+        lat,
+        lon,
+        weather: null
     };
-    localStorage.setItem("gameState", JSON.stringify(state));
+    searchBlock.classList.remove("hint");
+    state.cities.unshift(city);
+    state.selectedId = city.id;
+    searchBlock.classList.remove("hidden");
+
+    await loadCityWeather(city);
+    saveState();
+    renderCities();
+    renderDetails();
 }
 
 
-function loadGameState() {
-    let raw = localStorage.getItem("gameState");
-    if (!raw) return false;
+// обновление инфы о местоположении пользователя
 
-    let state = JSON.parse(raw);
-    matrix = state.matrix;
-    prev_matrix = state.prev_matrix;
-    score = state.score;
-    prev_score = state.prev_score;
-    leaderboard = state.leaderboard || [];
-    return true;
+function updateGeolocation() {
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            addCurrentLocation(pos.coords.latitude, pos.coords.longitude);
+        },
+        () => {
+            showOverlay("Доступ к геолокации не предоставлен");
+            setTimeout(hideOverlay, 2000);
+        }
+    );
 }
 
 
-function startGame() {
-    score = 0;
-    matrix = [
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-    ]
-    undoBtn.disabled = true;
-    createTilesHTML();
-    spawnTiles(3, 0.1);
-}
+// поиск городов для добавления в общий список
 
+cityInput.addEventListener("input", async () => {
+    let q = cityInput.value.trim();
+    suggestions.replaceChildren();
+    if (q.length < 2) return;
 
-document.addEventListener('keydown', (e) => {
-    if (e.code.startsWith("Arrow")) {
-        e.preventDefault()
-        slide(rotationRules[e.code.slice(5)]);
+    try {
+        let res = await fetch(
+            `https://api.weatherapi.com/v1/search.json?key=${API_KEY}&q=${encodeURIComponent(q)}`
+        );
+        let data = await res.json();
+
+        let seen = new Set();
+        data.forEach(city => {
+            let key = `${city.name}|${city.region}|${city.country}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+
+            let item = document.createElement("div");
+            item.textContent = `${city.name}, ${city.country}`;
+            item.addEventListener("click", () => {
+                addCity(city);
+                cityInput.value = "";
+                suggestions.replaceChildren();
+            });
+            suggestions.append(item);
+        });
+    } catch (err) {
+        console.error(err);
+        let errorDiv = document.createElement("div");
+        errorDiv.textContent = "Ошибка поиска";
+        suggestions.append(errorDiv);
     }
-    score_field.textContent = score;
-})
+});
 
 
-function showGameOverWindow() {
-    messageEl.textContent = "Игра окончена! Введите имя, чтобы сохранить результат:";
-    nameInput.classList.remove("hidden");
-    saveBtn.disabled = nameInput.value.trim() === "";
-    saveBtn.classList.remove("hidden");
-    modal.classList.remove("hidden");
+// добавление города с координатами и текщей погодой в массив
+
+async function addCity(city) {
+    let id = `${city.lat},${city.lon}`;
+    if (state.cities.some(c => c.id === id)) return; // если город уже есть
+
+    let newCity = {
+        id,
+        name: city.name,
+        lat: city.lat,
+        lon: city.lon,
+        weather: null
+    };
+    searchBlock.classList.remove("hint");
+    state.cities.push(newCity);
+    state.selectedId = id;
+
+    await loadCityWeather(newCity);
+    saveState();
+    renderCities();
+    renderDetails();
 }
 
 
-function hideGameOverWindow() {
-    modal.classList.add("hidden");
-}
+// получение инфы о погоде через API
 
+async function loadCityWeather(city) {
+    showOverlay(`Загрузка погоды для ${city.name}...`);
+    // details.replaceChildren();
+    // let loading = document.createElement("div");
+    // loading.textContent = `Загрузка погоды для ${city.name}...`;
+    // details.append(loading);
 
-// ------------------- ЗАГРУЗКА -------------------
+    try {
+        // на 2 дня вперед
+        let forecastRes = await fetch(
+            `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${city.lat},${city.lon}&days=3&lang=ru`
+        );
+        let forecastData = await forecastRes.json();
 
+        // предыдущие 2 дня
+        let pastDays = [];
+        let today = new Date();
+        for (let i = 1; i <= 2; i++) {
+            let d = new Date(today);
+            d.setDate(today.getDate() - i);
+            let dateStr = d.toISOString().slice(0, 10);
 
-window.onload = function() {
-    undoBtn = document.getElementById("undoBtn")
-    undoBtn.addEventListener("click", undoMove);
-    document.getElementById("restartBtn").addEventListener("click", restartGame);
-    document.getElementById("restartBtn2").addEventListener("click", () => {
-        hideGameOverWindow();
-        restartGame();
-    });
+            try {
+                let pastRes = await fetch(
+                    `https://api.weatherapi.com/v1/history.json?key=${API_KEY}&q=${city.lat},${city.lon}&dt=${dateStr}&lang=ru`
+                );
+                let pastData = await pastRes.json();
+                if (pastData.forecast && pastData.forecast.forecastday[0]) {
+                    pastDays.push(pastData.forecast.forecastday[0]);
+                }
+            } catch (err) {
+                showOverlay(`Ошибка загрузки погоды в прошлом для ${city.name}. Попробуйте позже`);
+                // console.error("Ошибка загрузки прошлой погоды:", err);
+            }
+        }
 
-    modal = document.getElementById("gameOverModal");
-    messageEl = document.getElementById("gameOverMessage");
-    nameInput = document.getElementById("playerNameInput");
-    saveBtn = document.getElementById("saveScoreBtn");
-    saveBtn.addEventListener("click", saveGameResult);
-    tbody = document.getElementById("leaderboardBody");
-    score_field = document.getElementById("score")
+        city.weather = forecastData;
+        city.weather.pastDays = pastDays;
 
-    saveBtn.disabled = true;
-    nameInput.addEventListener("input", () => {
-        saveBtn.disabled = nameInput.value.trim() === "";
-    });
-    // startGame();
-    if (loadGameState()) {
-        createTilesHTML();
-        updateAllTilesHTML();
-        score_field.textContent = score;
-    } else {
-        startGame();
-        saveGameState();
+    } catch (err) {
+        showOverlay(`Ошибка загрузки погоды для ${city.name}. Попробуйте позже`);
+        // console.error("Ошибка загрузки погоды:", err);
+        // city.weather = null;
+        // details.replaceChildren();
+        // let errorDiv = document.createElement("div");
+        // errorDiv.textContent = `Ошибка загрузки погоды для ${city.name}`;
+        // details.append(errorDiv);
     }
-    updateLeaderboardHTML();
+}
+
+
+// обновление данных о выбранном городе
+
+async function refreshCurrentCity() {
+    let city = state.cities.find(c => c.id === state.selectedId);
+    if (!city) return;
+    await loadCityWeather(city);
+    saveState();
+    renderDetails();
+}
+
+
+// обновление данных о всех городоах
+
+async function refreshAllCities() {
+    for (let city of state.cities) {
+        await loadCityWeather(city);
+    }
+    saveState();
+    renderDetails();
+}
+
+
+// удаление городоа из общего списка 
+
+function deleteCityFromList(event, city) {
+    event.stopPropagation();
+    state.cities = state.cities.filter(c => c.id !== city.id);
+    if (state.selectedId === city.id && state.cities.length > 0) {
+        state.selectedId = state.cities[0].id;
+    } else if (state.cities.length === 0) {
+        state.selectedId = null;
+    }
+    saveState();
+    renderCities();
+    renderDetails();
+}
+
+
+// общий список городов в HTML
+
+function renderCities() {
+    citiesList.replaceChildren();
+
+    state.cities.forEach(city => {
+        let li = document.createElement("li");
+        li.textContent = city.name;
+        if (city.id === state.selectedId) li.classList.add("active");
+
+        li.addEventListener("click", () => {
+            state.selectedId = city.id;
+            refreshCurrentCity();
+            renderCities();
+        });
+
+        // кнопка удаление города
+        let delBtn = document.createElement("button");
+        delBtn.classList.add("deleteBtn");
+        delBtn.textContent = "\u00D7";
+        delBtn.addEventListener("click", (e) => {
+            deleteCityFromList(e, city);
+        });
+        li.append(delBtn);
+        citiesList.append(li);
+    });
+}
+
+
+// показ оверлея поверх данных
+
+function showOverlay(text) {
+    let overlay = document.createElement("div");
+    overlay.classList.add("overlay");
+    overlay.textContent = text;
+    details.append(overlay);
+}
+
+// скрытие оверлея
+
+function hideOverlay() {
+    let overlay = details.querySelector(".overlay");
+    if (overlay) overlay.remove();
+}
+
+
+// рендер в HTML текущей погоды в выбранном городе
+
+function renderCurrentWeather(currentBlock, city) {
+    let icon = document.createElement("img");
+    icon.src = city.weather.current.condition.icon;
+    let condition = document.createElement("div");
+    condition.textContent = city.weather.current.condition.text;
+    let date = document.createElement("div");
+    date.textContent = new Date(city.weather.location.localtime)
+        .toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" });
+    let temp = document.createElement("div");
+    temp.textContent = `Температура: ${city.weather.current.temp_c} °C`;
+    let feels = document.createElement("div");
+    feels.textContent = `Ощущается как: ${city.weather.current.feelslike_c} °C`;
+    let windSpeed = (city.weather.current.wind_kph / 3.6).toFixed(1);
+    let wind = document.createElement("div");
+    wind.textContent = `Ветер: ${windSpeed} м/с, ${city.weather.current.wind_dir}`;
+
+    currentBlock.append(icon, condition, date, temp, feels, wind);
+}
+
+
+// получение инфы о температуре по часам
+
+function renderHourlyWeather(container, city) {
+    let hours = city.weather.forecast.forecastday[0].hour;
+    let nowHour = new Date().getHours();
+
+    hours.forEach(hour => {
+        let hourDate = new Date(hour.time);
+        if (hourDate.getHours() < nowHour) return;
+        let hourBlock = document.createElement("div");
+        hourBlock.classList.add("hourly-item");
+        let time = document.createElement("div");
+        time.textContent = hourDate.getHours() + ":00";
+        let icon = document.createElement("img");
+        icon.src = hour.condition.icon;
+        let temp = document.createElement("div");
+        temp.textContent = `${hour.temp_c} °C`;
+        let windSpeed = (hour.wind_kph / 3.6).toFixed(1);
+        let wind = document.createElement("div");
+        wind.textContent = `${windSpeed} м/с`;
+
+        hourBlock.append(time, icon, temp, wind);
+        container.append(hourBlock);
+    });
+}
+
+
+// рендер в HTML погоды в другой день
+
+function renderForecastWeather(forecastDiv, cityWeatherArray) {
+    cityWeatherArray.forEach(day => {
+        let dayBlock = document.createElement("div");
+        dayBlock.classList.add("forecast-day");
+        let date = document.createElement("div");
+        date.textContent = day.date;
+        let icon = document.createElement("img");
+        icon.src = day.day.condition.icon;
+        let condition = document.createElement("div");
+        condition.textContent = day.day.condition.text;
+        let temp = document.createElement("div");
+        temp.textContent = `Днём: ${day.day.avgtemp_c}°C / Ночью: ${day.day.mintemp_c}°C`;
+        dayBlock.append(date, icon, condition, temp);
+        forecastDiv.append(dayBlock);
+    });
+}
+
+
+// рендер данных о погоде в HTML
+
+function renderDetails() {
+    details.replaceChildren();
+    let city = state.cities.find(c => c.id === state.selectedId);
+    if (!city || !city.weather) return;
+
+    let title = document.createElement("h2");
+    title.textContent = city.name;
+
+    // текущая погода
+    let currentBlock = document.createElement("div");
+    currentBlock.classList.add("current-weather");
+    renderCurrentWeather(currentBlock, city);
+
+    // по часам
+    let hourlyBlock = document.createElement("div");
+    hourlyBlock.classList.add("hourly");
+    renderHourlyWeather(hourlyBlock, city);
+
+    // не текущая погода
+    let forecastBlock = document.createElement("div");
+    forecastBlock.classList.add("forecast"); // общий блок
+    // предыдущие 2 дня
+    if (city.weather.pastDays && city.weather.pastDays.length > 0) {
+        renderForecastWeather(forecastBlock, city.weather.pastDays);
+    }
+    // следующие 2 дня
+    renderForecastWeather(forecastBlock, city.weather.forecast.forecastday.slice(1, 3));
+
+    details.append(title, currentBlock, hourlyBlock, forecastBlock);
+}
+
+
+// сохранение в и загрузка из localStorage
+
+function saveState() {
+    localStorage.setItem("weatherState", JSON.stringify(state));
+}
+
+function loadState() {
+    let raw = localStorage.getItem("weatherState");
+    return raw ? JSON.parse(raw) : null;
 }

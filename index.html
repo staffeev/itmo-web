@@ -1,43 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <meta charset="UTF8">
+    <meta charset="UTF-8">
+    <title>Прогноз погоды</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2048</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="controls">
-        <button id="undoBtn" disabled="true">Отмена хода</button>
-        <button id="restartBtn">Начать заново</button>
-    </div>
-    <h2>Score: <span id="score">0</span></h2>
-    <div id="game-wrapper">
-        <div id="board">
-            <div class="grid"></div>
-        </div>
-    </div>
 
-    <h3>Лидерборд</h3>
-    <table id="leaderboardTable">
-        <thead>
-            <tr>
-                <th>Имя</th>
-                <th>Очки</th>
-                <th>Дата</th>
-            </tr>
-        </thead>
-        <tbody id="leaderboardBody"></tbody>
-    </table>
+<div class="app">
+    <aside class="sidebar">
+        <h2>Города</h2>
 
-    <div id="gameOverModal" class="modal hidden">
-        <div class="modal-content">
-            <p id="gameOverMessage">Игра окончена! Введите имя, чтобы сохранить результат:</p>
-            <input id="playerNameInput" type="text" placeholder="Ваше имя">
-            <button id="saveScoreBtn">Сохранить результат</button>
-            <button id="restartBtn2">Начать заново</button>
+        <div id="searchBlock" class="search hidden">
+            <input
+                type="text"
+                id="cityInput"
+                placeholder="Добавить город"
+                autocomplete="off"
+            >
+            <div id="suggestions" class="suggestions"></div>
         </div>
-    </div>
-<script src="logic.js"></script>
+
+        <ul id="citiesList" class="cities"></ul>
+
+        <button id="refreshBtn">Обновить</button>
+        <button id="geoBtn">Обновить местоположение</button>
+    </aside>
+
+    <main class="content">
+        <div id="details" class="details">
+            <p id="placeholder">Выберите город</p>
+        </div>
+    </main>
+</div>
+
+<script type="module" src="logic.js"></script>
 </body>
 </html>
