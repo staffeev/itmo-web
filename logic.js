@@ -308,7 +308,8 @@ function renderCurrentWeather(currentBlock, city) {
     let wind = document.createElement("div");
     wind.textContent = `Ветер: ${windSpeed} м/с, ${city.weather.current.wind_dir}`;
 
-    currentBlock.append(icon, condition, date, temp, feels, wind);
+    // currentBlock.append(icon, condition, date, temp, feels, wind);
+    currentBlock.append(date, icon, condition, temp, feels, wind);
 }
 
 
@@ -352,7 +353,8 @@ function renderForecastWeather(forecastDiv, cityWeatherArray) {
         let condition = document.createElement("div");
         condition.textContent = day.day.condition.text;
         let temp = document.createElement("div");
-        temp.textContent = `Днём: ${day.day.avgtemp_c}°C / Ночью: ${day.day.mintemp_c}°C`;
+        temp.textContent = `Днём: ${day.day.avgtemp_c}°C\nНочью: ${day.day.mintemp_c}°C`;
+        temp.style.whiteSpace = "pre-line";
         dayBlock.append(date, icon, condition, temp);
         forecastDiv.append(dayBlock);
     });
