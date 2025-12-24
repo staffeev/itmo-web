@@ -3,24 +3,28 @@ name: Deploy GitHub Pages
 on:
   push:
     branches:
-      - lab3
+      - lab4
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        persist-credentials: false
+      - uses: actions/checkout@v3
+        with:
+          persist-credentials: false
 
-    - name: Copy files from subfolder
-      run: |
-        mkdir deploy
-        cp -r semester1/lab3/* deploy/  # site/
+      - name: Copy files from subfolder
+        run: |
+          mkdir deploy
+          cp -r semester1/lab4/* deploy/  # site/
 
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./deploy
-        publish_branch: gh-pages
+      - name: Generate config.js with API key
+        run: |
+          echo "export const API_KEY='${{ secrets.WEATHER_API_KEY }}';" > deploy/config.js
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy
+          publish_branch: gh-pages

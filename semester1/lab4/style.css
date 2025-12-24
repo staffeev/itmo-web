@@ -331,3 +331,117 @@ h3 {
     font-size: 14px;
     z-index: 10;
 }
+/* ===================== TABLET ===================== */
+
+@media (max-width: 900px) {
+    .app {
+        width: 100%;
+        max-width: 100%;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .sidebar {
+        width: 240px;
+        flex: 0 0 240px;
+    }
+}
+
+/* ===================== MOBILE ===================== */
+
+@media (max-width: 600px) {
+
+    body {
+        align-items: stretch;
+    }
+
+    .app {
+        flex-direction: column;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    /* ---------- SIDEBAR ---------- */
+
+    .sidebar {
+        width: 100%;
+        flex: 0 0 auto;
+
+        border-right: none;
+        border-bottom: 1px solid rgba(120,170,220,0.35);
+
+        padding: 12px;
+    }
+
+    .cities {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        margin: 8px 0;
+    }
+
+    .cities li {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+
+    /* ---------- CONTENT ---------- */
+
+    .content {
+        padding: 14px;
+        overflow-y: auto;
+    }
+
+    h2 {
+        font-size: 18px;
+    }
+
+    h3 {
+        font-size: 14px;
+    }
+
+    /* ---------- CURRENT WEATHER ---------- */
+
+    .current-weather {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+
+        font-size: 14px;
+    }
+
+    .current-weather img {
+        width: 56px;
+        height: 56px;
+    }
+
+    /* ---------- HOURLY ---------- */
+
+    .hourly {
+        gap: 6px;
+    }
+
+    .hourly-item {
+        min-width: 60px;
+        font-size: 10px;
+    }
+
+    /* ---------- FORECAST ---------- */
+
+    .forecast-day,
+    .past-weather > div {
+        min-width: 95px;
+        font-size: 11px;
+    }
+
+    .forecast-day img,
+    .past-weather img {
+        width: 40px;
+        height: 40px;
+    }
+}
