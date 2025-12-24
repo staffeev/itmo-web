@@ -12,6 +12,7 @@ body {
     align-items: center;
 }
 
+
 .app {
     width: 100%;
     max-width: 900px;
@@ -28,6 +29,7 @@ body {
     padding: 15px;
     display: flex;
     flex-direction: column;
+    flex: 0 0 280px;
 }
 
 .search {
@@ -100,6 +102,8 @@ button {
     flex-grow: 1;
     padding: 20px;
     overflow-y: auto;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .details img {
@@ -157,4 +161,24 @@ h2 {
 h3 {
     margin: 10px 0 6px 0;
     font-size: 16px;
+}
+
+.details {
+    position: relative;
+    max-width: 100%;
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    z-index: 10;
+}
+.search.hint input {
+    border: 2px solid #ff7a7a;
+    background: #fff5f5;
 }

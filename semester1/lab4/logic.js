@@ -5,6 +5,7 @@ let suggestions = document.getElementById("suggestions");
 let citiesList = document.getElementById("citiesList");
 let details = document.getElementById("details");
 let refreshBtn = document.getElementById("refreshBtn");
+let geoBtn = document.getElementById("geoBtn");
 let searchBlock = document.getElementById("searchBlock");
 
 let state = {
@@ -13,6 +14,8 @@ let state = {
 };
 
 refreshBtn.addEventListener("click", refreshCurrentCity);
+geoBtn.addEventListener("click", updateGeolocation);
+
 
 init();
 
@@ -34,7 +37,7 @@ function init() {
         pos => addCurrentLocation(pos.coords.latitude, pos.coords.longitude),
         () => {
             searchBlock.classList.remove("hidden");
-            cityInput.style.border = "2px solid #ff7a7a";
+            searchBlock.classList.add("hint");
             cityInput.placeholder = "Добавьте город вручную";
         }
     );
@@ -62,7 +65,7 @@ async function addCurrentLocation(lat, lon) {
         lon,
         weather: null
     };
-
+    searchBlock.classList.remove("hint");
     state.cities.unshift(city);
     state.selectedId = city.id;
     searchBlock.classList.remove("hidden");
@@ -71,6 +74,21 @@ async function addCurrentLocation(lat, lon) {
     saveState();
     renderCities();
     renderDetails();
+}
+
+
+// обновление инфы о местоположении пользователя
+
+function updateGeolocation() {
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            addCurrentLocation(pos.coords.latitude, pos.coords.longitude);
+        },
+        () => {
+            showOverlay("Доступ к геолокации не предоставлен");
+            setTimeout(hideOverlay, 2000);
+        }
+    );
 }
 
 
@@ -94,7 +112,7 @@ cityInput.addEventListener("input", async () => {
             seen.add(key);
 
             let item = document.createElement("div");
-            item.textContent = `${city.name}, ${city.region}, ${city.country}`;
+            item.textContent = `${city.name}, ${city.country}`;
             item.addEventListener("click", () => {
                 addCity(city);
                 cityInput.value = "";
@@ -124,7 +142,7 @@ async function addCity(city) {
         lon: city.lon,
         weather: null
     };
-
+    searchBlock.classList.remove("hint");
     state.cities.push(newCity);
     state.selectedId = id;
 
@@ -138,10 +156,11 @@ async function addCity(city) {
 // получение инфы о погоде через API
 
 async function loadCityWeather(city) {
-    details.replaceChildren();
-    let loading = document.createElement("div");
-    loading.textContent = `Загрузка погоды для ${city.name}...`;
-    details.append(loading);
+    showOverlay(`Загрузка погоды для ${city.name}...`);
+    // details.replaceChildren();
+    // let loading = document.createElement("div");
+    // loading.textContent = `Загрузка погоды для ${city.name}...`;
+    // details.append(loading);
 
     try {
         // на 2 дня вперед
@@ -167,7 +186,8 @@ async function loadCityWeather(city) {
                     pastDays.push(pastData.forecast.forecastday[0]);
                 }
             } catch (err) {
-                console.error("Ошибка загрузки прошлой погоды:", err);
+                showOverlay(`Ошибка загрузки погоды в прошлом для ${city.name}. Попробуйте позже`);
+                // console.error("Ошибка загрузки прошлой погоды:", err);
             }
         }
 
@@ -175,12 +195,13 @@ async function loadCityWeather(city) {
         city.weather.pastDays = pastDays;
 
     } catch (err) {
-        console.error("Ошибка загрузки погоды:", err);
-        city.weather = null;
-        details.replaceChildren();
-        let errorDiv = document.createElement("div");
-        errorDiv.textContent = `Ошибка загрузки погоды для ${city.name}`;
-        details.append(errorDiv);
+        showOverlay(`Ошибка загрузки погоды для ${city.name}. Попробуйте позже`);
+        // console.error("Ошибка загрузки погоды:", err);
+        // city.weather = null;
+        // details.replaceChildren();
+        // let errorDiv = document.createElement("div");
+        // errorDiv.textContent = `Ошибка загрузки погоды для ${city.name}`;
+        // details.append(errorDiv);
     }
 }
 
@@ -252,6 +273,23 @@ function renderCities() {
 }
 
 
+// показ оверлея поверх данных
+
+function showOverlay(text) {
+    let overlay = document.createElement("div");
+    overlay.classList.add("overlay");
+    overlay.textContent = text;
+    details.append(overlay);
+}
+
+// скрытие оверлея
+
+function hideOverlay() {
+    let overlay = details.querySelector(".overlay");
+    if (overlay) overlay.remove();
+}
+
+
 // рендер в HTML текущей погоды в выбранном городе
 
 function renderCurrentWeather(currentBlock, city) {
@@ -263,8 +301,16 @@ function renderCurrentWeather(currentBlock, city) {
     temp.textContent = `Температура: ${city.weather.current.temp_c} °C`;
     let feels = document.createElement("div");
     feels.textContent = `Ощущается как: ${city.weather.current.feelslike_c} °C`;
-    currentBlock.append(icon, condition, temp, feels);}
+    let date = document.createElement("div");
+    date.textContent = new Date(city.weather.location.localtime).toLocaleDateString(
+        "ru-RU", {
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        }
+    );
 
+    currentBlock.append(date, icon, condition, temp, feels);}
 
 // рендер в HTML погоды в другой день
 
@@ -279,7 +325,7 @@ function renderForecastWeather(forecastDiv, cityWeatherArray) {
         let condition = document.createElement("div");
         condition.textContent = day.day.condition.text;
         let temp = document.createElement("div");
-        temp.textContent = `Температура: ${day.day.mintemp_c}°C — ${day.day.maxtemp_c}°C`;
+        temp.textContent = `Днём: ${day.day.avgtemp_c}°C / Ночью: ${day.day.mintemp_c}°C`;
         dayBlock.append(date, icon, condition, temp);
         forecastDiv.append(dayBlock);
     });
