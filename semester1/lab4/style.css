@@ -182,3 +182,24 @@ h3 {
     border: 2px solid #ff7a7a;
     background: #fff5f5;
 }
+.hourly {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+.hourly-item {
+    background: #f5f5f5;
+    border-radius: 6px;
+    padding: 6px;
+    text-align: center;
+    min-width: 70px;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+.hourly-item img {
+    width: 32px;
+    height: 32px;
+}

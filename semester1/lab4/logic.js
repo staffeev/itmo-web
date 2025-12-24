@@ -297,20 +297,47 @@ function renderCurrentWeather(currentBlock, city) {
     icon.src = city.weather.current.condition.icon;
     let condition = document.createElement("div");
     condition.textContent = city.weather.current.condition.text;
+    let date = document.createElement("div");
+    date.textContent = new Date(city.weather.location.localtime)
+        .toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" });
     let temp = document.createElement("div");
     temp.textContent = `Температура: ${city.weather.current.temp_c} °C`;
     let feels = document.createElement("div");
     feels.textContent = `Ощущается как: ${city.weather.current.feelslike_c} °C`;
-    let date = document.createElement("div");
-    date.textContent = new Date(city.weather.location.localtime).toLocaleDateString(
-        "ru-RU", {
-            day: "numeric",
-            month: "long",
-            year: "numeric"
-        }
-    );
+    let windSpeed = (city.weather.current.wind_kph / 3.6).toFixed(1);
+    let wind = document.createElement("div");
+    wind.textContent = `Ветер: ${windSpeed} м/с, ${city.weather.current.wind_dir}`;
 
-    currentBlock.append(date, icon, condition, temp, feels);}
+    currentBlock.append(icon, condition, date, temp, feels, wind);
+}
+
+
+// получение инфы о температуре по часам
+
+function renderHourlyWeather(container, city) {
+    let hours = city.weather.forecast.forecastday[0].hour;
+    let nowHour = new Date().getHours();
+
+    hours.forEach(hour => {
+        let hourDate = new Date(hour.time);
+        if (hourDate.getHours() < nowHour) return;
+        let hourBlock = document.createElement("div");
+        hourBlock.classList.add("hourly-item");
+        let time = document.createElement("div");
+        time.textContent = hourDate.getHours() + ":00";
+        let icon = document.createElement("img");
+        icon.src = hour.condition.icon;
+        let temp = document.createElement("div");
+        temp.textContent = `${hour.temp_c} °C`;
+        let windSpeed = (hour.wind_kph / 3.6).toFixed(1);
+        let wind = document.createElement("div");
+        wind.textContent = `${windSpeed} м/с`;
+
+        hourBlock.append(time, icon, temp, wind);
+        container.append(hourBlock);
+    });
+}
+
 
 // рендер в HTML погоды в другой день
 
@@ -347,6 +374,11 @@ function renderDetails() {
     currentBlock.classList.add("current-weather");
     renderCurrentWeather(currentBlock, city);
 
+    // по часам
+    let hourlyBlock = document.createElement("div");
+    hourlyBlock.classList.add("hourly");
+    renderHourlyWeather(hourlyBlock, city);
+
     // не текущая погода
     let forecastBlock = document.createElement("div");
     forecastBlock.classList.add("forecast"); // общий блок
@@ -357,7 +389,7 @@ function renderDetails() {
     // следующие 2 дня
     renderForecastWeather(forecastBlock, city.weather.forecast.forecastday.slice(1, 3));
 
-    details.append(title, currentBlock, forecastBlock);
+    details.append(title, currentBlock, hourlyBlock, forecastBlock);
 }
 
 
