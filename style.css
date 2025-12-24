@@ -331,7 +331,6 @@ h3 {
     font-size: 14px;
     z-index: 10;
 }
-/* ===================== TABLET ===================== */
 
 @media (max-width: 900px) {
     .app {
@@ -347,8 +346,6 @@ h3 {
     }
 }
 
-/* ===================== MOBILE ===================== */
-
 @media (max-width: 600px) {
 
     body {
@@ -360,8 +357,6 @@ h3 {
         height: 100vh;
         border-radius: 0;
     }
-
-    /* ---------- SIDEBAR ---------- */
 
     .sidebar {
         width: 100%;
@@ -390,8 +385,6 @@ h3 {
         font-size: 13px;
     }
 
-    /* ---------- CONTENT ---------- */
-
     .content {
         padding: 14px;
         overflow-y: auto;
@@ -404,8 +397,6 @@ h3 {
     h3 {
         font-size: 14px;
     }
-
-    /* ---------- CURRENT WEATHER ---------- */
 
     .current-weather {
         flex-direction: column;
@@ -420,8 +411,6 @@ h3 {
         height: 56px;
     }
 
-    /* ---------- HOURLY ---------- */
-
     .hourly {
         gap: 6px;
     }
@@ -430,8 +419,6 @@ h3 {
         min-width: 60px;
         font-size: 10px;
     }
-
-    /* ---------- FORECAST ---------- */
 
     .forecast-day,
     .past-weather > div {
