@@ -1,0 +1,17 @@
+{
+  "name": "zipper",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "busboy": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

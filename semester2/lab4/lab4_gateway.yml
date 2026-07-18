@@ -1,0 +1,28 @@
+openapi: 3.0.0
+info:
+  title: Web26 Lab4
+  version: 1.0.0
+
+servers:
+- url: https://d5du7j2g5q0jsthtvuiu.628pfjdx.apigw.yandexcloud.net
+paths:
+  /login:
+    get:
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        service_account_id: ajeque4q914sii97pnrk
+        function_id: d4ectfmcmmof4bbk2c24
+
+  /id/{N}:
+    get:
+      parameters:
+        - name: N
+          in: path
+          required: true
+          schema:
+            type: string
+
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        service_account_id: ajeque4q914sii97pnrk
+        function_id: d4ectfmcmmof4bbk2c24

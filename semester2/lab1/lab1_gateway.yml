@@ -1,0 +1,103 @@
+openapi: 3.0.0
+info:
+  title: Web26 Lab1 Task3
+  version: 1.0.0
+
+servers:
+- url: https://d5d8k1v0hicme73fr9pp.hsvi2zuh.apigw.yandexcloud.net
+paths:
+  /:
+    get:
+      x-yc-apigateway-integration:
+        type: dummy
+        ignoreTrailingSlashes: false
+        content:
+          '*': staffeev409626
+        http_code: 200
+        http_headers:
+          Content-Type: text/plain; charset=UTF-8
+          X-Author: staffeev409626
+          Access-Control-Allow-Origin: '*'
+  /login:
+    get:
+      x-yc-apigateway-integration:
+        type: dummy
+        ignoreTrailingSlashes: false
+        content:
+          '*': staffeev409626
+        http_code: 200
+        http_headers:
+          Content-Type: text/plain; charset=UTF-8
+          X-Author: staffeev409626
+          Access-Control-Allow-Origin: '*'
+
+  /sample:
+    get:
+      x-yc-apigateway-integration:
+        type: dummy
+        ignoreTrailingSlashes: false
+        content:
+          '*': |
+            function task(x) {
+              return x * this * this;
+            }
+        http_code: 200
+        http_headers:
+          Content-Type: text/plain
+          Access-Control-Allow-Origin: '*'
+  /promise:
+    get:
+      x-yc-apigateway-integration:
+        type: dummy
+        ignoreTrailingSlashes: false
+        content:
+          '*': |
+            function task(x){
+              return new Promise(function(resolve, reject){
+                if (x < 18) {
+                  resolve("yes");
+                } else {
+                  reject("no");
+                }
+              });
+            }
+        http_code: 200
+        http_headers:
+          Content-Type: text/plain
+          Access-Control-Allow-Origin: '*'
+  /fetch:
+    get:
+      x-yc-apigateway-integration:
+        type: dummy
+        ignoreTrailingSlashes: false
+        content:
+          '*': |
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <meta charset="UTF-8">
+            <title>Lab1 Task3</title>
+            </head>
+            <body>
+
+            <input id="inp">
+            <button id="bt">Отправить</button>
+
+            <script>
+            document.getElementById("bt").onclick = function() {
+              const url = document.getElementById("inp").value;
+
+              fetch(url)
+                .then(r => r.text())
+                .then(t => {
+                  document.getElementById("inp").value = t;
+                });
+            };
+            </script>
+
+            </body>
+            </html>
+        http_code: 200
+        http_headers:
+          Content-Type: text/html; charset=UTF-8
+          Access-Control-Allow-Origin: '*'
